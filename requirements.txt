@@ -1,0 +1,3 @@
+temporalio
+claude-agent-sdk
+aiofiles
