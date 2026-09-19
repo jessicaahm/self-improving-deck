@@ -1,6 +1,7 @@
 import os
 import aiofiles
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 from models import DeckInput, DeckOutput
 from claude_agent_sdk import query, ClaudeAgentOptions, ResultMessage
 
@@ -34,7 +35,7 @@ async def generate_deck(input: DeckInput) -> str:
             await f.write(result_text)
         return DeckOutput(status=200, message=f"Deck generated successfully at {output_path}")
     else:
-        return DeckOutput(status=500, message="Failed to generate deck.")
+        raise ApplicationError("Failure to generate deck", type="EmptyResult")
 
 @activity.defn
 async def revise_deck(input: DeckInput) -> str:

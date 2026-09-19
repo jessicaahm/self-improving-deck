@@ -1,1 +1,1 @@
-1. Add Retry Policies in Tempora;
+1. Add Retry Policies in Temporal
