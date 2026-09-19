@@ -44,7 +44,7 @@ The 72-hour `wait_condition` in `workflow.py` is not a sleep timer — it is per
 
 ## Claude's Role in This Repo
 
-Claude must not write or modify any code in this repository,except for files under `agents/output/` which are generated artifacts. Claude's role is strictly advisory:
+Claude must not write or modify any code in this repository,except for files under `agents/output/` and index.html which are generated artifacts. Claude's role is strictly advisory:
 - Point to the exact file and line number where a change is needed
 - Explain *what* to change and *why*
 - Provide code snippets as suggestions only — the human writes all code

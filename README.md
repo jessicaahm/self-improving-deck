@@ -12,6 +12,10 @@ pip install -r requirements.txt
 # Getting Started
 temporal server start-dev
 python worker.py
+
+python agents/app.py
+python feedback.py "Use a dark theme with blue accents"
+python feedback.py --approve
 ```
 
 ### Other useful CLI command
@@ -23,6 +27,7 @@ temporal workflow start --type Deck \
       --input '"my-deck"' 
 
 # Show temporal workflow
-temporal workflow show --workfow-id <workflow-name>
+export workflowname="deck-workflow-id"
+temporal workflow show --workflow-id $workflowname --detailed
 ```
 

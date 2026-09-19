@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self-Improving Deck — Temporal + AI Agents</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            line-height: 1.6;
+        }
+        .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
+        h1 { font-size: 2.2rem; margin-bottom: 0.5rem; color: #58a6ff; }
+        h2 { font-size: 1.5rem; margin: 2rem 0 1rem; color: #79c0ff; border-bottom: 1px solid #30363d; padding-bottom: 0.5rem; }
+        h3 { font-size: 1.1rem; margin: 1.2rem 0 0.5rem; color: #d2a8ff; }
+        p, li { color: #c9d1d9; margin-bottom: 0.5rem; }
+        ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+        .hero { text-align: center; padding: 3rem 0 2rem; }
+        .hero p { font-size: 1.15rem; color: #8b949e; max-width: 640px; margin: 0.5rem auto; }
+        .badge { display: inline-block; background: #1f6feb33; color: #58a6ff; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem; margin: 0.25rem; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .diagram-container { background: #ffffff; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; overflow-x: auto; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+        .problem { border-left: 3px solid #f85149; }
+        .solution { border-left: 3px solid #3fb950; }
+        code { background: #1f2937; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.9rem; }
+        .footer { text-align: center; padding: 2rem 0; color: #484f58; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Hero -->
+        <div class="hero">
+            <h1>Self-Improving Deck</h1>
+            <p>A Temporal durable-execution demo where two Claude agents collaboratively generate and refine an HTML presentation deck, with a human-in-the-loop feedback loop that survives
+crashes, restarts, and multi-hour waits.</p>
+            <div style="margin-top: 1rem;">
+                <span class="badge">Temporal</span>
+                <span class="badge">Claude Agent SDK</span>
+                <span class="badge">Durable Execution</span>
+                <span class="badge">Human-in-the-Loop</span>
+            </div>
+        </div>
+
+        <!-- What This Project Showcases -->
+        <h2>What This Project Showcases</h2>
+
+        <h3>The Problem: Fragile AI Pipelines</h3>
+        <div class="grid">
+            <div class="card problem">
+                <strong>LLM calls are expensive</strong>
+                <p>If a multi-step AI pipeline crashes mid-way, you lose all progress and repeat costly API calls.</p>
+            </div>
+            <div class="card problem">
+                <strong>Human feedback takes time</strong>
+                <p>A reviewer might take hours or days to respond. A simple script can't wait that long — the process dies.</p>
+            </div>
+            <div class="card problem">
+                <strong>No crash recovery</strong>
+                <p>Plain Python scripts lose all state on failure. No checkpointing, no replay, no retries.</p>
+            </div>                          
+            <div class="card problem">                                                                                                                                                      
+                <strong>No observability</strong>                                                                                                                                           
+                <p>When something fails in an AI pipeline, it's hard to know what succeeded, what failed, and where to resume.</p>                                                          
+            </div>                                                                                                                                                                          
+        </div>                                                                                                                                                                              
+                                                                                                                                                                                            
+        <h3>The Solution: Temporal + AI Agents</h3>                                                                                                                                         
+        <div class="grid">                                                                                                                                                                  
+            <div class="card solution">                                                                                                                                                     
+                <strong>Durable execution</strong>                                                                                                                                          
+                <p>Temporal checkpoints after each activity. Kill the worker, restart it — the workflow resumes from the last success. No repeated LLM calls.</p>                         
+            </div>                                                                                                                                                                          
+            <div class="card solution">                                                                                                                                                     
+                <strong>Long-lived waits</strong>                                                                                                                                           
+                <p><code>wait_condition</code> persists in Temporal's event history. The process can reboot and the workflow still unblocks when a signal arrives — even days later.</p>    
+            </div>                                                                                                                                                                          
+            <div class="card solution">                                                                                                                                                     
+                <strong>Automatic retries</strong>                                                                                                                                          
+                <p>Activities retry with exponential backoff on failure. Rate limits, network blips, API errors — all handled automatically.</p>                                            
+            </div>                                                                                                                                                                          
+            <div class="card solution">                                                                                                                                                     
+                <strong>Full event history</strong>                                                                                                                                         
+                <p>Every activity input, output, signal, and state transition is recorded. Replay exactly what happened, debug any failure.</p>                                             
+            </div>                                                                                                                                                                          
+        </div>                                                                                                                                                                              
+                                                                                                                                                                                            
+        <!-- Workflow Diagram -->                                                                                                                                                           
+        <h2>Workflow Diagram</h2>                                                                                                                                                           
+                                                                                                                                                                                            
+        <div class="diagram-container">                                                                                                                                                     
+            <!-- Embedded draw.io diagram as SVG -->                                                                                                                                      
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 520" style="width:100%;height:auto;">                                                                                  
+                <defs>                                                                                                                                                                      
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">                                                                            
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#333" />                                                                                                                   
+                    </marker>                                                                                                                                                               
+                    <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">                                                                       
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#1f6feb" />                                                                                                                
+                    </marker>                                                                                                                                                               
+                </defs>                                                                                                                                                                     
+                                                                                                                                                                                            
+                <!-- Background -->                                                                                                                                                         
+                <rect width="880" height="520" rx="8" fill="#fafbfc"/>                                                                                                                      
+                                                                                                                                                                                            
+                <!-- Title -->                                                                                                                                                              
+                <text x="440" y="35" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="bold" fill="#24292f">SelfImprovingDeckWorkflow</text>                        
+                                                                                                                                                                                            
+                <!-- Step 1: Starter -->                                                                                                                                                  
+                <rect x="30" y="70" width="130" height="60" rx="8" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5"/>                                                                     
+                <text x="95" y="96" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#0969da">starter.py</text>                                        
+                <text x="95" y="114" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#0969da">Start Workflow</text>                                                      
+                                                                                                                                                                                            
+                <!-- Arrow 1→2 -->                                                                                                                                                          
+                <line x1="160" y1="100" x2="200" y2="100" stroke="#333" stroke-width="1.5" marker-end="url(#arrowhead)"/>                                                                   
+                                                                                                                                                                                            
+                <!-- Step 2: Generate Deck Activity -->                                                                                                                                     
+                <rect x="210" y="60" width="160" height="80" rx="8" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>                                                                    
+                <text x="290" y="88" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#6f4e00">Activity 1</text>                                       
+                <text x="290" y="106" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#6f4e00">generate_deck</text>                                                      
+                <text x="290" y="124" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#9a6700">Claude Agent → deck.html</text>                                            
+                                                                                                                                                                                            
+                <!-- Arrow 2→3 -->                                                                                                                                                          
+                <line x1="370" y1="100" x2="420" y2="100" stroke="#333" stroke-width="1.5" marker-end="url(#arrowhead)"/>                                                                   
+                                                                                                                                                                                            
+                <!-- Step 3: Wait Condition -->                                                                                                                                             
+                <polygon points="500,60 580,100 500,140 420,100" fill="#f0fff4" stroke="#3fb950" stroke-width="1.5"/>                                                                       
+                <text x="500" y="96" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#1a7f37">wait_condition</text>                                   
+                <text x="500" y="112" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#1a7f37">approved?</text>                                                         
+                                                                                                                                                                                            
+                <!-- Arrow: Approved → Complete -->                                                                                                                                         
+                <line x1="580" y1="100" x2="680" y2="100" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arrowhead)"/>                                                                
+                <text x="630" y="90" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#1a7f37">Yes</text>                                                                 
+                                                                                                                                                                                            
+                <!-- Step 4: Complete -->                                                                                                                                                   
+                <rect x="690" y="70" width="150" height="60" rx="30" fill="#dafbe1" stroke="#3fb950" stroke-width="1.5"/>                                                                   
+                <text x="765" y="96" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#1a7f37">Workflow</text>                                         
+                <text x="765" y="114" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#1a7f37">Complete</text>                                        
+                                                                                                                                                                                            
+                <!-- Feedback Loop (below) -->                                                                                                                                              
+                                                                                                                                                                                            
+                <!-- Arrow: wait → feedback path (No) -->                                                                                                                                   
+                <line x1="500" y1="140" x2="500" y2="200" stroke="#1f6feb" stroke-width="1.5" marker-end="url(#arrowhead-blue)"/>                                                           
+                <text x="515" y="175" font-family="sans-serif" font-size="10" fill="#1f6feb">No (needs revision)</text>                                                                     
+                                                                                                                                                                                            
+                <!-- feedback.py box -->                                                                                                                                                  
+                <rect x="30" y="250" width="130" height="60" rx="8" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5"/>                                                                    
+                <text x="95" y="276" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#0969da">feedback.py</text>                                      
+                <text x="95" y="294" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#0969da">Send Feedback</text>                                                       
+                                                                                                                                                                                            
+                <!-- Arrow: feedback.py → Update -->                                                                                                                                        
+                <line x1="160" y1="280" x2="200" y2="280" stroke="#333" stroke-width="1.5" marker-end="url(#arrowhead)"/>                                                                   
+                                                                                                                                                                                            
+                <!-- Update Handler -->                                                                                                                                                     
+                <rect x="210" y="200" width="160" height="50" rx="8" fill="#f6f0ff" stroke="#8957e5" stroke-width="1.5"/>                                                                   
+                <text x="290" y="222" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="bold" fill="#6e40c9">@workflow.update</text>                                
+                <text x="290" y="238" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#6e40c9">submit_feedback</text>                                                    
+                                                                                                                                                                                            
+                <!-- Arrow: Update → Revise Activity -->                                                                                                                                    
+                <line x1="290" y1="250" x2="290" y2="270" stroke="#333" stroke-width="1.5" marker-end="url(#arrowhead)"/>                                                                   
+                                                                                                                                                                                            
+                <!-- Revise Deck Activity -->                                                                                                                                               
+                <rect x="210" y="280" width="160" height="80" rx="8" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>                                                                   
+                <text x="290" y="308" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#6f4e00">Activity 2</text>                                      
+                <text x="290" y="326" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#6f4e00">revise_deck</text>                                                        
+                <text x="290" y="344" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#9a6700">Claude Agent → edit deck.html</text>                                       
+                                                                                                                                                                                            
+                <!-- Arrow: Revise → back to wait -->                                                                                                                                       
+                <path d="M 370 320 L 600 320 L 600 140 L 540 120" fill="none" stroke="#1f6feb" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrowhead-blue)"/>                
+                <text x="610" y="230" font-family="sans-serif" font-size="9" fill="#1f6feb" transform="rotate(-90, 610, 230)">back to wait</text>                                           
+                                                                                                                                                                                        
+                <!-- Signal box -->                                                                                                                                                         
+                <rect x="690" y="250" width="150" height="60" rx="8" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5"/>                                                                   
+                <text x="765" y="276" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="#0969da">@workflow.signal</text>                                
+                <text x="765" y="294" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#0969da">approve</text>                                                            
+                                                                                                                                                                                            
+                <!-- Arrow: signal → wait (approved=True) -->                                                                                                                               
+                <path d="M 765 250 L 765 160 L 540 115" fill="none" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arrowhead)"/>                                                      
+                <text x="700" y="190" font-family="sans-serif" font-size="9" fill="#3fb950">approved = True</text>                                                                          
+                                                                                                                                                                                            
+                <!-- Temporal Features Legend -->                                                                                                                                           
+                <rect x="30" y="400" width="820" height="100" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>                                                                     
+                <text x="440" y="425" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="bold" fill="#24292f">Temporal Durability Guarantees</text>                  
+                                                                                                                                                                                            
+                <text x="70" y="452" font-family="sans-serif" font-size="11" fill="#24292f">✓ State Persistence</text>                                                                      
+                <text x="70" y="472" font-family="sans-serif" font-size="9" fill="#57606a">Checkpoint after each activity</text>                                                            
+                                                                                                                                                                                            
+                <text x="250" y="452" font-family="sans-serif" font-size="11" fill="#24292f">✓ Crash Recovery</text>                                                                        
+                <text x="250" y="472" font-family="sans-serif" font-size="9" fill="#57606a">Resume from last success</text>                                                                 
+                                                                                                                                                                                            
+                <text x="430" y="452" font-family="sans-serif" font-size="11" fill="#24292f">✓ Automatic Retries</text>                                                                     
+                <text x="430" y="472" font-family="sans-serif" font-size="9" fill="#57606a">Exponential backoff on failure</text>                                                           
+                                                                                                                                                                                            
+                <text x="630" y="452" font-family="sans-serif" font-size="11" fill="#24292f">✓ No Duplicate LLM Calls</text>                                                                
+                <text x="630" y="472" font-family="sans-serif" font-size="9" fill="#57606a">Replay from event history</text>                                                                
+            </svg>                                                                                                                                                                          
+        </div>                                                                                                                                                                              
+                                                                                                                                                                                            
+        <!-- How to Run -->                                                                                                                                                                 
+        <h2>Running the Demo</h2>                                                                                                                                                         
+        <div class="card">                                                                                                                                                                  
+            <ol style="padding-left: 1.5rem;">                                                                                                                                              
+                <li style="margin-bottom: 0.75rem;"><strong>Start Temporal Server</strong><br><code>temporal server start-dev</code></li>                                                   
+                <li style="margin-bottom: 0.75rem;"><strong>Start the Worker</strong><br><code>cd agents && python worker.py</code></li>                                                    
+                <li style="margin-bottom: 0.75rem;"><strong>Start the Workflow</strong><br><code>python starter.py</code></li>                                                              
+                <li style="margin-bottom: 0.75rem;"><strong>Send Feedback</strong><br><code>python feedback.py "Use a dark theme with blue accents"</code></li>                             
+                <li style="margin-bottom: 0.75rem;"><strong>Approve the Deck</strong><br><code>python feedback.py --approve</code></li>                                                     
+            </ol>                                                                                                                                                                           
+        </div>                                                                                                                                                                              
+                                                                                                                                                                                            
+        <!-- Demonstrating Crash Recovery -->                                                                                                                                               
+        <h2>Demonstrating Crash Recovery</h2>                                                                                                                                               
+        <div class="card">                                                                                                                                                                  
+            <ol style="padding-left: 1.5rem;">                                                                                                                                              
+                <li>Start the workflow (<code>python starter.py</code>)</li>                                                                                                                
+                <li>Kill the worker mid-activity (<code>Ctrl+C</code>)</li>                                                                                                                 
+                <li>Restart the worker (<code>python worker.py</code>)</li>                                                                                                                 
+                <li>Observe: the workflow resumes from the last completed activity — no repeated LLM calls</li>                                                                             
+            </ol>                                                                                                                                                                           
+        </div>                                                                                                                                                                              
+                                                                                                                                                                                            
+        <div class="footer">                                                                                                                                                                
+            <!-- Distributed Systems Challenges -->                                                                                                                                             
+          <h2>How Temporal Addresses Distributed Systems Challenges</h2>                                                                                                                      
+                                                                                                                                                                                              
+          <div class="grid">                  
+              <div class="card">                                                                                                                                                              
+                  <h3 style="margin-top:0; color:#58a6ff;">Exactly-Once Execution</h3>                                                                                                        
+                  <p>Temporal's event history ensures each activity runs exactly once. Completed activities are replayed from history on recovery — not re-executed. This prevents duplicate  
+  LLM calls and duplicate side effects.</p>                                                                                                                                                   
+              </div>
+              <div class="card">                                                                                                                                                              
+                  <h3 style="margin-top:0; color:#58a6ff;">Deterministic Replay</h3>                                                                                                          
+                  <p>Workflows must be deterministic — given the same event history, they always make the same decisions. Temporal enforces this via the workflow sandbox, which blocks       
+  non-deterministic imports and operations. This guarantees consistent state reconstruction after any crash.</p>                                                                              
+              </div>                                                                                                                                                                          
+              <div class="card">                                                                                                                                                              
+                  <h3 style="margin-top:0; color:#58a6ff;">Failure Modes</h3>                                                                                                                 
+                  <ul>                                                                                                                                                                        
+                      <li><strong>Worker dies:</strong> Temporal detects missing heartbeats, reassigns the activity to another worker. The workflow resumes from the last checkpoint.</li>    
+                      <li><strong>Temporal server dies:</strong> Event history is persisted to the database. On restart, all workflows resume from their last recorded state.</li>            
+                      <li><strong>Network partition:</strong> Workers reconnect and poll for tasks. Pending signals and updates are delivered once connectivity is restored.</li>             
+                  </ul>                                                                                                                                                                       
+              </div>                                                                                                                                                                          
+              <div class="card">                                                                                                                                                              
+                  <h3 style="margin-top:0; color:#58a6ff;">Scalability</h3>                                                                                                                   
+                  <p>Multiple workers can poll the same task queue. Temporal distributes activities across available workers automatically. To scale, add more worker instances — no code     
+  changes needed.</p>                                                                                                                                                                         
+              </div>                                                                                                                                                                          
+              <div class="card">                                                                                                                                                              
+                  <h3 style="margin-top:0; color:#58a6ff;">Idempotency</h3>                                                                                                                   
+                  <p>Activities must be safe to retry. In this project, <code>generate_deck</code> writes with mode <code>"w"</code> (overwrite), so running it twice produces the same file. 
+  <code>revise_deck</code> edits the existing deck in place — also idempotent.</p>                                                                                                            
+              </div>                                                                                                                                                                          
+              <div class="card">                                                                                                                                                              
+                  <h3 style="margin-top:0; color:#58a6ff;">Saga Pattern &amp; Compensation</h3>                                                                                               
+                  <p>If a later activity fails permanently, Temporal does not auto-rollback earlier steps. You own the compensation logic — e.g., if <code>revise_deck</code> fails after 3   
+  retries, you could restore the original deck from a backup. Each activity is its own unit of work; rollback is explicit, not implicit.</p>
+              </div>
+          </div>                                                                                                                             
+        </div>                                                                                                                                                                              
+    </div>                                                                                                                                                                                  
+</body>                                                                                                                                                                                     
+</html>   
