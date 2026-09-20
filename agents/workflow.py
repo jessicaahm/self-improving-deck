@@ -19,15 +19,18 @@ class Deck:
             backoff_coefficient=2.0,
             maximum_interval=timedelta(minutes=1),
             maximum_attempts=3,
+            non_retryable_error_types=["Unauthorized"]
         )
         # Step 1: Generate the initial deck
+        workflow.logger.info("Step 1: Starting deck generation activity.")
         result = await workflow.execute_activity(
             "generate_deck",
             DeckInput(content=input.content, workflow_id=workflow.info().workflow_id),
             start_to_close_timeout=timedelta(minutes=3),
             retry_policy=retry_policy
         )
-        # Step 2: Wait for approval
+        # Step 3: Wait for approval
+        workflow.logger.info("Step 3: Waiting for deck approval.")
         try:
             await workflow.wait_condition(lambda: self.approved, timeout=timedelta(hours=1))
         except workflow.TimeoutError:
@@ -36,6 +39,7 @@ class Deck:
 
     @workflow.update
     async def submit_feedback(self, feedback: str):
+        workflow.logger.info("Step 2: Submitting feedback for deck revision.")
         await workflow.wait_condition(lambda: not self.revision_in_progress)
         self.revision_in_progress = True
         retry_policy = RetryPolicy(
@@ -43,8 +47,9 @@ class Deck:
                     backoff_coefficient=2.0,
                     maximum_interval=timedelta(minutes=1),
                     maximum_attempts=3,
-        )
-            # Step 3: Revise the deck based on feedback
+                    non_retryable_error_types=["Unauthorized"]
+
+                )
         try:
             revised_result = await workflow.execute_activity(
                 "revise_deck",
@@ -52,6 +57,7 @@ class Deck:
                 start_to_close_timeout=timedelta(minutes=5),
                 retry_policy=retry_policy
             )
+            workflow.logger.info(f"Revised Deck: {revised_result}")
             return f"Revised Deck: {revised_result}"
         finally:
             self.revision_in_progress = False  # Reset the revision work-in-progress flag

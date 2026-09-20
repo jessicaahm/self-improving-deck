@@ -31,3 +31,7 @@ export workflowname="deck-workflow-id"
 temporal workflow show --workflow-id $workflowname --detailed
 ```
 
+## Tech Stack
+- Claude Agent SDK : Use this instead of client sdk due to cost reason. You will need a claude code subscription to run this project
+- Temporal: Will display (1) Durability, (2) Visibility, (3)Atomicity in Orchestration, (4) Faciliate Saga Pattern
+- Code: Idempotency, Saga Pattern

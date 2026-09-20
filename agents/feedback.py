@@ -7,7 +7,7 @@ async def main():
     client = await Client.connect("localhost:7233", namespace="default") #Temporal cluster and namespace
 
     #Execute a workflow
-    handle = client.get_workflow_handle("deck-workflow-2")
+    handle = client.get_workflow_handle("deck-workflow-1")
 
     if "--approve" in sys.argv:
         # Send approval signal to the workflow

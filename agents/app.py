@@ -1,8 +1,8 @@
 import asyncio
-import sys
 from models import DeckInput
 from workflow import Deck
 from temporalio.client import Client
+from temporalio.common import WorkflowIDReusePolicy
 
 # Use dataclass for backwards-compatible way to evolve code
 
@@ -14,8 +14,9 @@ async def main():
     handle = await client.start_workflow(
         Deck.run,
         DeckInput(content="../content/content.md"), #pass path instead of content
-        id="deck-workflow-2",
+        id="deck-workflow-1",
         task_queue="greeting-task-queue",
+        id_reuse_policy=WorkflowIDReusePolicy.ALLOW_DUPLICATE_FAILED_ONLY
     )
     print(f"Started workflow. Workflow ID: {handle.id}, RunID: {handle.result_run_id}")
 
