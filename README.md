@@ -51,12 +51,14 @@ temporal workflow show --workflow-id $workflowname --detailed
 3. Approve while Revise Deck is running, 
 4. Approve while Gen Deck is running, 
 **Saga**
-2. Timeout (Gen Deck > Revise Deck > Timeout): Passed, outcome: All files deleted (Saga kicked in)
-4. Gen Deck > Completed > Revise Deck > Logout from Claude: Failed > restore deck: Passed, Outcome: Restore Deck worked (Saga Kicked in)
+5. Timeout (Gen Deck > Revise Deck > Timeout): Passed, outcome: All files deleted (Saga kicked in)
+6. Gen Deck > Completed > Revise Deck > Logout from Claude: Failed > restore deck: Passed, Outcome: Restore Deck worked (Saga Kicked in)
+7. Gen Deck > Completed > Click cancelled
+8. Gen Deck > Completed > Click terminated
 **Test Durability**
-3. Gen Deck > shut down worker > complete Gen Deck > Revise Deck: Passed, Outcome: Worker Resumed and activity continued
+8. Gen Deck > shut down worker > complete Gen Deck > Revise Deck: Passed, Outcome: Worker Resumed and activity continued
 **Concurrency**
-5. Gen Deck > Completed > Send Feedback A and Feedback B at the same time > B waits on lock > A applied > B applied, Passed, Outcome: Revisions serialized by asyncio.Lock, revision_status query shows locked=true while A runs, 
+9. Gen Deck > Completed > Send Feedback A and Feedback B at the same time > B waits on lock > A applied > B applied, Passed, Outcome: Revisions serialized by asyncio.Lock, revision_status query shows locked=true while A runs, 
 **Idempotency**
-6. Gen Deck > Completed > Revise Deck > kill worker after Claude has partially edited the deck > restart worker > retry attempt 2: Outcome: Deck reset from snapshot before retry, feedback applied exactly once (no duplicated edits)
+10. Gen Deck > Completed > Revise Deck > kill worker after Claude has partially edited the deck > restart worker > retry attempt 2: Outcome: Deck reset from snapshot before retry, feedback applied exactly once (no duplicated edits)
 
