@@ -1,12 +1,15 @@
 {
-    "permissions": {
-      "allow": [
-        "Read",
-        "Write(/Users/jessica/Library/CloudStorage/OneDrive-IBM/GitHub/demo/self-improving-deck/.claude/*)",
-        "Write(/Users/jessica/Library/CloudStorage/OneDrive-IBM/GitHub/demo/self-improving-deck/agents/output/*)"
-      ],
-      "deny": [
-        "Write(/Users/jessica/Library/CloudStorage/OneDrive-IBM/GitHub/demo/self-improving-deck/../*)"
-      ]
-    }
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write(/Users/jessica/Library/CloudStorage/OneDrive-IBM/GitHub/demo/self-improving-deck/.claude/*)",
+      "Write(/Users/jessica/Library/CloudStorage/OneDrive-IBM/GitHub/demo/self-improving-deck/agents/output/*)"
+    ],
+    "deny": [
+      "Write(/Users/jessica/Library/CloudStorage/OneDrive-IBM/GitHub/demo/self-improving-deck/../*)"
+    ]
+  },
+  "enabledPlugins": {
+    "temporal@temporal-marketplace": true
+  }
 }
