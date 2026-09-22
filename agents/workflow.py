@@ -14,7 +14,6 @@ class Deck:
         self.approved = False  # Initialize approval status
         self.revision_in_progress_lock = asyncio.Lock()
         self.revisions_completed = 0 #check revision
-        self.revisions_in_flight = 0   # >0 while revise_deck is running
         self.deck_ready = False #status for deck existence
 
     @workflow.run
@@ -80,7 +79,6 @@ class Deck:
                         maximum_attempts=3,
                         non_retryable_error_types=["Unauthorized"]
                     )
-            self.revisions_in_flight += 1
             try:
                 # Step 1: Create backup for restore if needed
                 backup = await workflow.execute_activity(
@@ -110,15 +108,12 @@ class Deck:
                 workflow.logger.info(f"Revised Deck: {revised_result}, added revision {self.revisions_completed}")
                 return {
                     "revision": self.revisions_completed,
-                    "in_flight": self.revisions_in_flight,
                     "approved": self.approved,
                 }
             except Exception:
                 # If encounter exception rollback the revision
                 await saga.compensate()
                 raise
-            finally:
-                self.revisions_in_flight -= 1
     
     @workflow.query
     def revision_status(self) -> dict:
@@ -145,5 +140,5 @@ class Deck:
     def validate_approve(self) -> None:
         if not self.deck_ready:
             raise ValueError("Deck not generated yet")
-        if self.revisions_in_flight > 0:
+        if self.revision_in_progress_lock.locked():  # approval not allowed if revision is in progress
             raise ValueError("Revision in progress — wait, then re-read the deck")
