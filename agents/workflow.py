@@ -13,6 +13,8 @@ class Deck:
     def __init__(self):
         self.approved = False  # Initialize approval status
         self.revision_in_progress_lock = asyncio.Lock()
+        self.revisions_completed = 0 #check revision
+        self.revisions_in_flight = 0   # >0 while revise_deck is running
         self.deck_ready = False #status for deck existence
 
     @workflow.run
@@ -56,14 +58,16 @@ class Deck:
                     raise ApplicationError("No approval within 1h", type="ApprovalTimeout", non_retryable=True)
                 finally:
                     await workflow.wait_condition(workflow.all_handlers_finished)
-
-            return result.message
+            return (
+                f"{result.message}"
+                f"({self.revisions_completed} revision(s) applied; approved)"
+            )
         except (Exception, asyncio.CancelledError):
             await saga.compensate()
             raise
 
     @workflow.update
-    async def submit_feedback(self, feedback: str):
+    async def submit_feedback(self, feedback: str) -> str:
         workflow.logger.info("Step 2: Submitting feedback for deck revision.")
         saga = Saga()
         wf_id = workflow.info().workflow_id
@@ -76,6 +80,7 @@ class Deck:
                         maximum_attempts=3,
                         non_retryable_error_types=["Unauthorized"]
                     )
+            self.revisions_in_flight += 1
             try:
                 # Step 1: Create backup for restore if needed
                 backup = await workflow.execute_activity(
@@ -101,18 +106,25 @@ class Deck:
                     heartbeat_timeout=timedelta(seconds=30),
                     retry_policy=retry_policy
                 )
-                workflow.logger.info(f"Revised Deck: {revised_result}")
-                return f"Revised Deck: {revised_result}"
+                self.revisions_completed += 1
+                workflow.logger.info(f"Revised Deck: {revised_result}, added revision {self.revisions_completed}")
+                return {
+                    "revision": self.revisions_completed,
+                    "in_flight": self.revisions_in_flight,
+                    "approved": self.approved,
+                }
             except Exception:
                 # If encounter exception rollback the revision
                 await saga.compensate()
                 raise
+            finally:
+                self.revisions_in_flight -= 1
     
     @workflow.query
     def revision_status(self) -> dict:
         return {
-            "locked": self.revision_in_progress_lock.locked()
-            # "holder": self.current_revision,
+            "locked": self.revision_in_progress_lock.locked(),
+            "holder": self.revisions_completed
             # "step": self.current_step,
         }
 
@@ -123,8 +135,15 @@ class Deck:
         if not feedback.strip():
             raise ValueError("Feedback cannot be empty")
 
-    @workflow.signal
-    async def approve(self):
+    @workflow.update
+    async def approve(self) -> str:
         # Step 4: Approve the deck
         self.approved = True
         return f"Deck approved."
+
+    @approve.validator
+    def validate_approve(self) -> None:
+        if not self.deck_ready:
+            raise ValueError("Deck not generated yet")
+        if self.revisions_in_flight > 0:
+            raise ValueError("Revision in progress — wait, then re-read the deck")

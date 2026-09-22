@@ -24,7 +24,7 @@ async def main():
 
     if args.approve:
         # Send approval signal to the workflow
-        await handle.signal("approve")
+        await handle.execute_update("approve")
         print("Approval signal sent.Workflow completed")
     else:
         # Wait for the workflow to complete and get the result
