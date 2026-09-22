@@ -288,7 +288,8 @@
         <h2><span class="num">02</span> Architecture</h2>
         <p class="lede">
             Three processes: the Temporal server holding the event history, a worker running the workflow and
-            its activities, and your terminal sending the workflow start, the feedback, and the approval.
+            its activities, and your terminal sending the workflow start, the feedback, any deadline extension,
+            and the approval.
             Only activities reach Claude. Workflow code has to stay deterministic, so it makes no
             such calls itself.
         </p>
@@ -323,9 +324,10 @@
                 <text x="32" y="80" class="lbl">app.py</text>
                 <text x="32" y="96" class="sm">start_workflow(Deck.run)</text>
 
-                <rect x="16" y="136" width="160" height="52" rx="8" class="bx"/>
+                <rect x="16" y="136" width="160" height="64" rx="8" class="bx"/>
                 <text x="32" y="160" class="lbl">feedback.py</text>
                 <text x="32" y="176" class="sm">--feedback / --approve</text>
+                <text x="32" y="190" class="sm">--extend &lt;minutes&gt;</text>
 
                 <rect x="16" y="216" width="160" height="52" rx="8" class="bx"/>
                 <text x="32" y="240" class="lbl">temporal CLI</text>
@@ -342,27 +344,28 @@
                 <text x="240" y="170" class="sm" fill="#c9d1d9">▸ Task queue</text>
                 <text x="252" y="185" class="sm">greeting-task-queue</text>
                 <text x="240" y="210" class="sm" fill="#c9d1d9">▸ Timers &amp; retries</text>
-                <text x="252" y="225" class="sm">approval timeout, backoff</text>
+                <text x="252" y="225" class="sm">approval deadline, backoff</text>
                 <text x="240" y="250" class="sm" fill="#c9d1d9">▸ Web UI :8233</text>
 
                 <!-- ---- worker ---- -->
                 <text x="448" y="42" class="cap">worker.py · one process, polls the queue</text>
                 <rect x="448" y="52" width="456" height="240" rx="10" fill="#0f1319" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
 
-                <rect x="466" y="74" width="190" height="200" rx="8" class="bx" stroke="#8957e5"/>
+                <rect x="466" y="74" width="190" height="208" rx="8" class="bx" stroke="#8957e5"/>
                 <text x="480" y="98" class="lbl" fill="#d2a8ff">Deck workflow</text>
                 <text x="480" y="113" class="sm">deterministic · sandboxed</text>
                 <line x1="480" y1="124" x2="642" y2="124" stroke="#21262d"/>
                 <text x="480" y="143" class="sm" fill="#c9d1d9">@workflow.run</text>
-                <text x="492" y="156" class="sm">generate → wait_condition</text>
+                <text x="492" y="156" class="sm">generate → deadline loop</text>
                 <text x="480" y="177" class="sm" fill="#c9d1d9">@workflow.update</text>
                 <text x="492" y="190" class="sm">submit_feedback + validator</text>
-                <text x="480" y="211" class="sm" fill="#c9d1d9">@workflow.signal</text>
-                <text x="492" y="224" class="sm">approve</text>
-                <text x="480" y="245" class="sm" fill="#c9d1d9">@workflow.query</text>
-                <text x="492" y="258" class="sm">revision_status → locked?</text>
+                <text x="492" y="203" class="sm">approve + validator</text>
+                <text x="480" y="223" class="sm" fill="#c9d1d9">@workflow.signal</text>
+                <text x="492" y="236" class="sm">extend_deadline</text>
+                <text x="480" y="256" class="sm" fill="#c9d1d9">@workflow.query</text>
+                <text x="492" y="269" class="sm">revision_status → locked?</text>
 
-                <rect x="688" y="74" width="196" height="200" rx="8" class="bx" stroke="#d29922"/>
+                <rect x="688" y="74" width="196" height="208" rx="8" class="bx" stroke="#d29922"/>
                 <text x="704" y="98" class="lbl" fill="#d29922">Activities</text>
                 <text x="704" y="113" class="sm">retried · idempotent</text>
                 <line x1="704" y1="124" x2="868" y2="124" stroke="#21262d"/>
@@ -439,9 +442,11 @@
             The red gutter marks where the README's failure cases can strike this path. Cases 1&ndash;14 each
             land on one of these nine messages. A <strong style="color:#f85149;">✗</strong> on a lifeline shows
             <em>who</em> dies at that event: the worker process, the Claude call, the workflow run or the rejected
-            update handler. The amber band down <code>submit_feedback()</code> is the revision lock, closed where
+            update handler. The amber band down the update lane is the revision lock, closed where
             it is acquired and open where it is released; a second feedback blocks for that whole stretch (Case 9).
-            Click any marker to jump there, and the caption will name the casualty.
+            Both <code>submit_feedback</code> and <code>approve</code> are updates with validators, so either can be
+            refused before it changes anything; only <code>extend_deadline</code> is a signal. Click any marker to
+            jump there, and the caption will name the casualty.
         </p>
         <div class="player seq-player">
             <div class="player-bar">
@@ -450,7 +455,7 @@
                 <button class="playbtn" id="seq-toggle" aria-label="Pause or play the sequence">⏸ Pause</button>
             </div>
             <div class="seqwrap"><svg id="seq" xmlns="http://www.w3.org/2000/svg" role="img"
-                aria-label="Sequence diagram of the happy path: app.py starts the workflow, generate_deck calls Claude and writes the deck, feedback is submitted as an update that snapshots and revises the deck, and the approve signal completes the run. A right-hand gutter marks which of the fourteen failure cases can strike at each message."></svg></div>
+                aria-label="Sequence diagram of the happy path: app.py starts the workflow, generate_deck calls Claude and writes the deck, feedback is submitted as an update that snapshots and revises the deck, an extend_deadline signal pushes out the review window, and the approve update completes the run. A right-hand gutter marks which of the fourteen failure cases can strike at each message."></svg></div>
         </div>
 
         <h3 style="margin: 2.25rem 0 0.35rem;">Every failure case</h3>
@@ -484,12 +489,15 @@
                         Attempts 2 and 3 are skipped and compensation runs at once, saving ~35s of pointless backoff.</td>
                 </tr>
                 <tr>
-                    <td><span class="tag">Case 3</span><span class="pt">wait_condition(approved)</span><span class="dies">✗ Deck.run()</span></td>
+                    <td><span class="tag">Case 3</span><span class="pt">the approval deadline loop</span><span class="dies">✗ Deck.run()</span></td>
                     <td>The human never responds. A plain script cannot wait hours for a reviewer, and cannot survive
                         a restart while it waits.</td>
-                    <td><code>wait_condition(approved, timeout=3m)</code> is a durable timer in the event history. The
-                        worker can restart mid-wait and it still fires. On expiry the run raises
-                        <code>ApprovalTimeout</code>, drains in-flight handlers, then
+                    <td><code>review_deadline</code> is set once, and the loop waits on
+                        <code>approved or deadline_version != seen</code> with the remaining time as its timeout — a
+                        durable timer in the event history, so the worker can restart mid-wait and it still fires. A
+                        reviewer who needs longer sends the <code>extend_deadline</code> signal, which moves the
+                        deadline and bumps the version; the loop wakes, recomputes <code>remaining</code> and re-arms.
+                        On genuine expiry the run raises <code>ApprovalTimeout</code>, drains in-flight handlers, then
                         <code>delete_deck(delete_all=True)</code> removes deck, backup and <code>.tmp</code>.</td>
                 </tr>
                 <tr>
@@ -501,17 +509,22 @@
                         deterministically and no completed activity is re-run. (Compare Case 10, detected in ~30s.)</td>
                 </tr>
                 <tr>
-                    <td><span class="tag">Case 5</span><span class="pt">signal: approve</span></td>
+                    <td><span class="tag">Case 5</span><span class="pt">update: approve()</span><span class="dies">✗ approve()</span></td>
                     <td>Approval lands while a revision is still running. A naive workflow would return while Claude
                         is still writing to the deck.</td>
-                    <td><code>finally: wait_condition(all_handlers_finished)</code> holds the workflow open until the
-                        update handler completes. The deck is never cut off half-way; without it Temporal logs an
-                        unfinished-handler warning.</td>
+                    <td><code>validate_approve</code> rejects it: <code>revisions_in_flight &gt; 0</code> →
+                        <em>"Revision in progress — wait, then re-read the deck"</em>. The counter is incremented
+                        <strong>before</strong> the lock is acquired, so a second feedback still queued behind the
+                        first also blocks approval. Making <code>approve</code> an update rather than a signal is what
+                        makes this rejection reachable at all — the reviewer is told to look again, instead of
+                        approving a deck they have not seen.</td>
                 </tr>
                 <tr>
-                    <td><span class="tag">Case 6</span><span class="pt">approval timer fires</span></td>
-                    <td>Same race as Case 5, but on the timeout path: the deadline expires mid-revision.</td>
-                    <td>The same <code>finally</code> applies. The handler finishes (or fails and runs
+                    <td><span class="tag">Case 6</span><span class="pt">approval deadline expires</span></td>
+                    <td>Same race as Case 5, but on the timeout path, where no validator can intervene: the deadline
+                        passes mid-revision.</td>
+                    <td><code>except: await wait_condition(all_handlers_finished)</code> runs before
+                        <code>saga.compensate()</code>. The handler finishes (or fails and runs
                         <code>restore_deck</code>), and <em>then</em> the run's <code>delete_deck</code> wipes
                         everything. Both sagas unwind, LIFO within each.</td>
                 </tr>
@@ -519,9 +532,8 @@
                     <td><span class="tag">Case 7</span><span class="pt">workflow cancelled</span></td>
                     <td>A cancel request is delivered as <code>asyncio.CancelledError</code> inside <code>run()</code>.</td>
                     <td>Caught by <code>except (Exception, asyncio.CancelledError)</code>, so <code>delete_deck</code>
-                        still runs. Note that <code>submit_feedback</code>'s <code>except Exception</code> does
-                        <strong>not</strong> catch it, so a revision in flight skips <code>restore_deck</code>.
-                        <code>delete_deck</code> cleans up regardless.</td>
+                        still runs. <code>submit_feedback</code> now catches the same pair, so a revision in flight
+                        gets its <code>restore_deck</code> compensation before the run's saga unwinds on top of it.</td>
                 </tr>
                 <tr class="nofix">
                     <td><span class="tag">Case 8</span><span class="pt">workflow terminated</span></td>
@@ -590,8 +602,11 @@
     <div class="container">
         <h2><span class="num">03</span> Use cases the repo exercises</h2>
         <p class="lede">
-            Each scenario is a scripted failure or race you can reproduce live. All of them have been run
-            end to end against the code in this repo.
+            Each scenario is a scripted failure or race you can reproduce live. The ones marked
+            <span class="pill pass" style="display:inline-block;margin:0 0.15rem;">passed</span> have been run end to
+            end against the code in this repo; <span class="pill todo" style="display:inline-block;margin:0 0.15rem;">new</span>
+            marks behaviour that came in with the approval-update and deadline-extension change and has not been
+            re-run yet.
         </p>
 
         <div class="grid two">
@@ -600,29 +615,29 @@
                 <div class="case">
                     <span class="pill pass">passed</span>
                     <div class="body">
-                        <div class="flow">Approve before generation finishes</div>
-                        <div class="out">The signal sets <code>approved</code> early; the workflow still finishes generating, then completes with the deck saved.</div>
-                    </div>
-                </div>
-                <div class="case">
-                    <span class="pill pass">passed</span>
-                    <div class="body">
                         <div class="flow">Feedback sent before the deck exists</div>
                         <div class="out">The update validator rejects it with <code>"Deck not generated yet"</code>, without touching workflow state.</div>
                     </div>
                 </div>
                 <div class="case">
-                    <span class="pill pass">passed</span>
+                    <span class="pill todo">new</span>
                     <div class="body">
-                        <div class="flow">Approve while <code>revise_deck</code> is running</div>
-                        <div class="out">The wait unblocks, but <code>all_handlers_finished</code> keeps the workflow from completing mid-revision, so the in-flight edit finishes first.</div>
+                        <div class="flow">Approve while <code>generate_deck</code> is still running</div>
+                        <div class="out">Now that <code>approve</code> is an update, <code>validate_approve</code> rejects it with <code>"Deck not generated yet"</code> instead of silently arming the flag. The caller resends once generation returns.</div>
                     </div>
                 </div>
                 <div class="case">
-                    <span class="pill pass">passed</span>
+                    <span class="pill todo">new</span>
                     <div class="body">
-                        <div class="flow">Approve while <code>generate_deck</code> is running</div>
-                        <div class="out">The signal sets <code>approved</code> while the activity is still in flight; the wait consumes it as soon as generation returns.</div>
+                        <div class="flow">Approve while <code>revise_deck</code> is running</div>
+                        <div class="out"><code>revisions_in_flight &gt; 0</code>, so the validator rejects with <code>"Revision in progress"</code>. The reviewer re-reads the revised deck before approving it.</div>
+                    </div>
+                </div>
+                <div class="case">
+                    <span class="pill todo">new</span>
+                    <div class="body">
+                        <div class="flow">Extend the review window before it expires</div>
+                        <div class="out"><code>extend_deadline(5)</code> moves <code>review_deadline</code> and bumps <code>deadline_version</code>; the parked loop wakes on the version change and re-arms a timer for the new remaining time.</div>
                     </div>
                 </div>
             </div>
@@ -734,12 +749,22 @@ python worker.py</code></pre>
         <div class="runstep">
             <div class="n">5</div>
             <div>
-                <h3>Send feedback, then approve</h3>
-                <p class="sub">Feedback is an <em>update</em> (it waits for the revision and returns a result); approval is a <em>signal</em> (fire-and-forget).</p>
+                <h3>Send feedback, extend if you need to, then approve</h3>
+                <p class="sub">Feedback and approval are both <em>updates</em>: they run a validator first and return a
+                    result, so either can be refused. Extending the review window is a <em>signal</em>
+                    (fire-and-forget), which is why the CLI cannot tell you whether it was applied.</p>
 <pre><code>python feedback.py deck-workflow-96853fe5 \
   --feedback "Add a first slide called '2 You' with a picture of a flower"
 
+<span class="cmt"># buy another 5 minutes on the 3-minute approval window</span>
+python feedback.py deck-workflow-96853fe5 --extend 5
+
 python feedback.py deck-workflow-96853fe5 --approve</code></pre>
+                <p class="sub" style="margin-top: 0.5rem;">
+                    Approval is rejected while a revision is in flight (<code>"Revision in progress"</code>) or before
+                    the deck exists (<code>"Deck not generated yet"</code>). A rejected update leaves no events in
+                    history, so just resend it.
+                </p>
             </div>
         </div>
 
@@ -829,7 +854,8 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
   const LANES = {
     cli:  { x:  98, name: 'app.py / feedback.py', sub: 'your terminal' },
     run:  { x: 294, name: 'Deck.run()',           sub: 'workflow' },
-    upd:  { x: 490, name: 'submit_feedback()',    sub: 'update handler' },
+    upd:  { x: 490, name: 'Update handlers',      sub: 'submit_feedback · approve',
+            who: 'the update handler' },
     wkr:  { x: 686, name: 'Activity worker',      sub: 'activities' },
     cld:  { x: 862, name: 'Claude Agent SDK',     sub: 'claude-sonnet-5' },
     disk: { x:1024, name: 'Disk',                 sub: 'agents/output/' }
@@ -845,9 +871,9 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
     ['cld','wkr',  'ResultMessage(html)', 'ret', 'Raw HTML comes back in the result message'],
     ['wkr','disk', 'write deck.tmp → os.replace', 'io', 'Atomic write: a partial deck is never visible'],
     ['wkr','run',  'DeckOutput(200) → deck_ready = True', 'ret', 'The result lands in history and unlocks the validator'],
-    ['run','run',  'wait_condition(approved, timeout=3m)  [TIMER STARTS]', 'self', 'The workflow parks. The timer is durable; no process need stay alive'],
+    ['run','run',  'review_deadline = now + 3m → wait_condition(...)  [TIMER STARTS]', 'self', 'The workflow parks on the deadline. The timer is durable; no process need stay alive'],
     ['cli','upd',  'update: submit_feedback("add slide")', 'call', 'Feedback arrives as an update, not a signal, so it returns a result to the caller'],
-    ['upd','upd',  'validator ok → acquire the revision lock', 'self', 'revision_status now answers {"locked": true}'],
+    ['upd','upd',  'validator ok → revisions_in_flight++ → acquire the lock', 'self', 'The counter is raised before the lock, so approval is refused even while this revision is only queued'],
     ['upd','wkr',  'execute_activity(snapshot_deck)', 'call', 'The deck is backed up before anything edits it'],
     ['wkr','disk', 'copy → deck_<id>-backup.html', 'io', 'The snapshot every retry will rewind to'],
     ['wkr','upd',  'SnapshotResult(created=True)', 'ret', 'created=True is what decides whether a compensation is registered'],
@@ -858,11 +884,16 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
     ['cld','disk', 'Claude edits deck_<id>.html directly', 'io', 'The model writes the file itself, from inside an activity, never from workflow code'],
     ['cld','wkr',  'ResultMessage', 'ret', 'The edit session ends'],
     ['wkr','upd',  'result_text', 'ret', 'The activity result is recorded in history'],
-    ['upd','cli',  '"Revised Deck: ..." · release lock', 'ret', 'The update returns to the caller that sent it'],
-    ['cli','run',  'signal: approve', 'sig', 'Fire-and-forget; signals have no validator and no return value'],
-    ['run','run',  'approved = True → wait_condition unblocks  [TIMER CANCELLED]', 'self', 'The durable timer is discarded'],
-    ['run','run',  'finally: wait_condition(all_handlers_finished)  [no-op]', 'self', 'Here the handler is already done, but Case 5 depends on this line'],
-    ['run','cli',  'workflow COMPLETED · deck + backup kept', 'ret', 'A success path: neither saga is compensated']
+    ['upd','cli',  '"Revised Deck: ..." · release lock · in_flight--', 'ret', 'The update returns to the caller that sent it, and approval is unblocked again'],
+    ['cli','run',  'signal: extend_deadline(5)', 'sig', 'The reviewer wants longer. This one is a signal: fire-and-forget, no validator, no return value'],
+    ['run','run',  'review_deadline += 5m · deadline_version++', 'self', 'The handler only moves the deadline; the version bump is how the parked loop is told about it'],
+    ['run','run',  'wait_condition(deadline_version != seen) wakes → loop re-arms  [NEW TIMER]', 'self', 'The loop wakes, recomputes remaining, and starts a fresh durable timer on the extended deadline'],
+    ['cli','upd',  'update: approve()', 'call', 'Approval is an update now, not a signal, so it can be rejected and the caller gets an answer'],
+    ['upd','upd',  'validate_approve: deck_ready · revisions_in_flight == 0', 'self', 'The validator runs before the handler body, so a rejected approval leaves no events in history'],
+    ['upd','run',  'approved = True', 'call', 'The handler flips the flag that run()’s while loop is waiting on'],
+    ['upd','cli',  '"Deck approved."', 'ret', 'The update returns, so the CLI knows the approval was accepted rather than merely delivered'],
+    ['run','run',  'wait_condition unblocks → while loop exits  [TIMER CANCELLED]', 'self', 'approved is True, so the loop ends without arming another timer'],
+    ['run','cli',  'workflow COMPLETED · deck + backup kept', 'ret', 'A success path: neither saga is compensated, and all_handlers_finished is only needed on the failure path']
   ];
 
 
@@ -870,16 +901,17 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
   const RISKS = {
     2:  { cases: '4', dies: 'wkr',      text: 'Worker dies here and <code>generate_deck</code> has no heartbeat, so Temporal cannot tell a slow Claude call from a dead worker and waits the full <code>start_to_close=5m</code> before retrying.' },
     4:  { cases: '1 · 2', dies: 'cld',  text: 'Claude fails (<code>ClaudeAgentFailed</code>, <code>EmptyResult</code>) → 3 attempts, then <code>delete_deck</code> and the run FAILS. If it is "Not logged in" → <code>Unauthorized</code>, non-retryable, compensation runs at once.' },
-    8:  { cases: '3 · 7 · 8', dies: 'run', text: 'Nobody approves → the 3m timer fires <code>ApprovalTimeout</code> and <code>delete_deck(delete_all=True)</code> wipes everything. Cancel is caught and compensates too; <b>Terminate</b> runs no workflow code at all and leaves the files behind.' },
+    8:  { cases: '3 · 6 · 7 · 8', dies: 'run', text: 'Nobody approves <i>and</i> nobody extends → the deadline passes, <code>ApprovalTimeout</code> is raised, <code>all_handlers_finished</code> drains any revision still running (Case 6), then <code>delete_deck(delete_all=True)</code> wipes everything. Cancel is caught and compensates too; <b>Terminate</b> runs no workflow code at all and leaves the files behind.' },
     9:  { cases: '11', dies: 'upd',     text: 'Sent too early, the validator rejects it because <code>deck_ready</code> is False. No lock, no activity, no event in history.' },
     10: { cases: '9',      text: 'A second feedback contends here. The amber band shows how long <code>revision_in_progress_lock</code> is held. B blocks for all of it, then snapshots A&rsquo;s result, not the original.' },
     11: { cases: '14', dies: 'wkr',     text: 'If <code>snapshot_deck</code> exhausts its retries, <code>saga.add(restore_deck)</code> is never reached, so compensation is a no-op. That is correct, because the deck was never touched.' },
     15: { cases: '10', dies: 'wkr',     text: 'Worker dies mid-edit. Heartbeats every 2s mean it is caught in ~30s, and attempt 2 rewinds from the snapshot so the feedback applies exactly once.' },
     17: { cases: '12 · 13', dies: 'cld', text: '<code>Unauthorized</code> skips the retries; a retryable failure burns all 3 attempts. Either way <code>restore_deck</code> puts the deck back and the workflow stays alive.' },
-    22: { cases: '5 · 6',  text: 'If this lands mid-revision, <code>all_handlers_finished</code> holds the workflow open until the edit completes. Same guard when the <i>timer</i> fires instead: the handler finishes, then <code>delete_deck</code> wipes everything.' },
+    25: { cases: '5', dies: 'upd', text: 'If this lands mid-revision, <code>validate_approve</code> sees <code>revisions_in_flight &gt; 0</code> and rejects the update before it touches any state. The caller is told to wait and re-read the deck; the run stays parked on its deadline.' },
   };
 
   const COLOR = { call:'#58a6ff', ret:'#8b949e', self:'#d2a8ff', io:'#3fb950', sig:'#d29922' };
+  const who = id => LANES[id].who || LANES[id].name;
   const H = TOP + MSGS.length * GAP + 26;
 
   const svg = document.getElementById('seq');
@@ -1042,7 +1074,7 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
         d: `M ${cx - 5.4} ${y - 5.4} L ${cx + 5.4} ${y + 5.4} M ${cx + 5.4} ${y - 5.4} L ${cx - 5.4} ${y + 5.4}`,
         stroke: '#f85149', 'stroke-width': 2.4, 'stroke-linecap': 'round', fill: 'none' }));
       const tip = el('title');
-      tip.textContent = `${LANES[risk.dies].name} dies here · Case ${risk.cases}`;
+      tip.textContent = `${who(risk.dies)} dies here · Case ${risk.cases}`;
       cross.appendChild(tip);
       cross.addEventListener('click', () => { if (allOn) setAll(false); stop(); show(i); });
       crossLayer.appendChild(cross);
@@ -1094,7 +1126,7 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
     const m = groups[i];
     capEl.innerHTML = `<b>${i + 1}/${groups.length}</b> &nbsp;${m.caption}`
       + (m.risk ? `<br><i>⚠ Case ${m.risk.cases}</i>`
-          + (m.risk.dies ? ` <i>✗ ${LANES[m.risk.dies].name} dies here</i>` : '')
+          + (m.risk.dies ? ` <i>✗ ${who(m.risk.dies)} dies here</i>` : '')
           + ` &nbsp;${m.risk.text}` : '');
     if (!reducedMotion) fly(m.path, COLOR[m.kind]);
   }
