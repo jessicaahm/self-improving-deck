@@ -4,7 +4,7 @@ This repository shows how hard it is to generate a deck and iterate on it with h
 > Note: This may be an overly simplified example, but in a production setting e.g. transfer fund, make travel booking, these considereations may be worth considering.
 
 **4 Areas to be covered:**
-Interaction    — signal vs update vs query; validators; handler concurrency
+Concurrency    — signal vs update vs query; validators; handler concurrency
 Detection      — timeouts; heartbeats; retryable vs terminal errors
 Recovery       — idempotency; saga/compensation; durability/replay
 Foundation     — determinism & sandbox; workflow ID reuse; schema evolution

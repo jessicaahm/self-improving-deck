@@ -30,7 +30,7 @@
         line-height: 1.65;
         -webkit-font-smoothing: antialiased;
     }
-    .container { max-width: 1000px; margin: 0 auto; padding: 0 1.5rem; }
+    .container { max-width: min(94vw, 1500px); margin: 0 auto; padding: 0 1.5rem; }
 
     /* ---------- nav ---------- */
     nav {
@@ -62,7 +62,7 @@
     h3 { font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text); }
     .lede { color: var(--muted); font-size: 1.02rem; max-width: 72ch; margin-bottom: 1.75rem; }
     p { color: #c9d1d9; }
-    .sub { color: var(--muted); font-size: 0.9rem; }
+    .sub { color: var(--muted); font-size: 0.9rem; max-width: 96ch; }
     code {
         font-family: var(--mono); font-size: 0.85em;
         background: #1f262e; color: #c9d1d9;
@@ -125,56 +125,59 @@
     /* ---------- animated walkthrough ---------- */
     .player { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
     .player-bar {
-        display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;
+        display: flex; gap: 0.75rem; align-items: flex-start;
         padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); background: #12171e;
     }
-    .tab {
-        font-size: 0.82rem; font-family: var(--mono); color: var(--muted);
-        background: transparent; border: 1px solid var(--line); border-radius: 999px;
-        padding: 0.25rem 0.7rem; cursor: pointer; transition: all 0.15s ease;
-    }
-    .tab:hover { color: var(--text); border-color: var(--muted); }
-    .tab[aria-selected="true"] { color: var(--bg); background: var(--blue); border-color: var(--blue); font-weight: 600; }
+    .tabrow { flex: 1; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+
+    /* ---------- sequence diagram ---------- */
+    .seq-player { width: 100%; }
+    .seqwrap { overflow-x: auto; padding: 0.5rem 0.75rem 1rem; background: var(--bg-inset); }
+    #seq { width: 100%; min-width: 900px; height: auto; display: block; }
+    #seq.allon .msg { opacity: 1; }
+    #seq.allon .risk { opacity: 1; }
+    #seq.allon .cross { opacity: 1; animation: none; }
+    .seq-caption { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+    .seq-caption b { color: var(--blue); font-weight: 600; }
+    .seq-caption i { color: var(--red); font-style: normal; font-weight: 600; }
+    .seq-caption code { font-size: 0.75rem; padding: 0.05rem 0.3rem; }
+    .lockband { opacity: 0.45; transition: opacity 0.35s ease; }
+    .lockband.on { opacity: 1; }
+    .cross { opacity: 0.75; cursor: pointer; transition: opacity 0.3s ease; }
+    .cross.on { opacity: 1; animation: crosspulse 1.1s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+    @keyframes crosspulse { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.22); } }
+    .msg { opacity: 0.16; transition: opacity 0.3s ease; cursor: pointer; }
+    .msg.past { opacity: 0.55; }
+    .msg.on { opacity: 1; }
     .playbtn {
         margin-left: auto; font-size: 0.82rem; font-family: var(--mono);
         color: var(--text); background: var(--bg-inset); border: 1px solid var(--line);
         border-radius: 6px; padding: 0.28rem 0.75rem; cursor: pointer; min-width: 5.5rem;
     }
     .playbtn:hover { border-color: var(--blue); color: var(--blue); }
-    .steps { list-style: none; padding: 0.4rem 0 0.9rem; position: relative; }
-    .step {
-        display: grid; grid-template-columns: 2.6rem 1fr; gap: 0.75rem;
-        padding: 0.55rem 1.1rem; cursor: pointer; position: relative;
-        opacity: 0.38; transition: opacity 0.35s ease, background 0.35s ease;
+
+    /* ---------- failure-case table ---------- */
+    .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-soft); }
+    .ftable { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 720px; }
+    .ftable th {
+        text-align: left; font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.07em; color: #6e7681;
+        padding: 0.75rem 0.9rem; border-bottom: 1px solid var(--line); background: #12171e;
     }
-    .step::before {
-        content: ''; position: absolute; left: 2.05rem; top: 0; bottom: 0;
-        width: 1px; background: var(--line);
+    .ftable td { padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; color: var(--muted); line-height: 1.55; }
+    .ftable tbody tr:last-child td { border-bottom: 0; }
+    .ftable tbody tr:hover td { background: rgba(88, 166, 255, 0.04); }
+    .ftable td:first-child { width: 20%; }
+    .ftable td:nth-child(2) { width: 36%; }
+    .ftable .grouprow th {
+        color: var(--blue); font-size: 0.78rem; text-transform: none; letter-spacing: 0;
+        background: var(--bg-inset); border-top: 1px solid var(--line);
     }
-    .step:first-child::before { top: 1.35rem; }
-    .step:last-child::before { bottom: calc(100% - 1.35rem); }
-    .step .marker {
-        position: relative; z-index: 1; width: 1.6rem; height: 1.6rem; margin-top: 0.1rem;
-        border-radius: 50%; border: 1px solid var(--line); background: var(--bg-inset);
-        display: grid; place-items: center; font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
-        transition: all 0.35s ease;
-    }
-    .step .title { font-size: 0.93rem; color: var(--text); font-weight: 500; }
-    .step .detail { font-size: 0.84rem; color: var(--muted); }
-    .step .detail code { font-size: 0.8rem; }
-    .step .tag {
-        font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase;
-        letter-spacing: 0.05em; padding: 0.05rem 0.4rem; border-radius: 4px;
-        border: 1px solid var(--line); color: var(--muted); margin-left: 0.4rem; white-space: nowrap;
-    }
-    .step.done { opacity: 0.72; }
-    .step.done .marker { border-color: var(--green); color: var(--green); }
-    .step.active { opacity: 1; background: rgba(88, 166, 255, 0.06); }
-    .step.active .marker {
-        border-color: var(--blue); color: var(--bg); background: var(--blue);
-        box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.15);
-    }
-    .step.active .tag { border-color: var(--blue); color: var(--blue); }
+    .ftable .tag { display: block; font-family: var(--mono); font-size: 0.72rem; color: var(--red); margin-bottom: 0.2rem; }
+    .ftable .pt { display: block; font-family: var(--mono); font-size: 0.78rem; color: var(--text); }
+    .ftable .dies { display: block; font-size: 0.72rem; color: var(--red); margin-top: 0.3rem; opacity: 0.85; }
+    .ftable .nofix td:last-child { color: #f0b5b1; }
+    .ftable code { font-size: 0.78rem; }
 
     /* ---------- run steps ---------- */
     .runstep { display: grid; grid-template-columns: 1.9rem 1fr; gap: 0.8rem; margin-bottom: 1rem; }
@@ -185,13 +188,14 @@
     }
     pre {
         background: var(--bg-inset); border: 1px solid var(--line); border-radius: 8px;
-        padding: 0.8rem 1rem; overflow-x: auto; margin-top: 0.4rem;
+        padding: 0.8rem 1rem; overflow-x: auto; margin-top: 0.4rem; max-width: 92ch;
     }
     pre code { background: none; padding: 0; font-size: 0.83rem; line-height: 1.7; color: #c9d1d9; }
     .cmt { color: #6e7681; }
     .note {
         border-left: 3px solid var(--blue); background: rgba(31, 111, 235, 0.08);
         padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; font-size: 0.9rem; color: var(--muted);
+        max-width: 100ch;
     }
 
     /* ---------- stack ---------- */
@@ -201,7 +205,7 @@
     }
     .stack-row:first-child { border-top: 0; }
     .stack-row .name { font-family: var(--mono); font-size: 0.88rem; color: var(--blue); }
-    .stack-row .what { font-size: 0.9rem; color: var(--muted); }
+    .stack-row .what { font-size: 0.9rem; color: var(--muted); max-width: 100ch; }
 
     footer { border-top: 1px solid var(--line-soft); margin-top: 3rem; padding: 2rem 0 3rem; color: #484f58; font-size: 0.85rem; }
 
@@ -222,9 +226,9 @@
 <nav>
     <div class="container">
         <span class="brand">self-improving-deck</span>
-        <a href="#about"><span class="num">01</span>About</a>
-        <a href="#use-cases"><span class="num">02</span>Use cases</a>
-        <a href="#architecture"><span class="num">03</span>Architecture</a>
+        <a href="#about"><span class="num">01</span>Four areas</a>
+        <a href="#architecture"><span class="num">02</span>Architecture</a>
+        <a href="#use-cases"><span class="num">03</span>Use cases</a>
         <a href="#run"><span class="num">04</span>Run it</a>
         <a href="#stack"><span class="num">05</span>Tech stack</a>
     </div>
@@ -251,42 +255,7 @@
 <!-- ============ 1. ABOUT ============ -->
 <section id="about">
     <div class="container">
-        <h2><span class="num">01</span> What this repository is about</h2>
-        <p class="lede">
-            Generating a deck and iterating on it with human feedback sounds like a simple script — until you
-            run it in a distributed environment where the worker can crash, the model can fail mid-edit, and
-            the human can take days to respond. This repo is a teaching demo: a deliberately small domain used
-            to make durable-execution problems concrete.
-        </p>
-
-        <div class="grid two" style="margin-bottom: 1.5rem;">
-            <div class="card red">
-                <span class="kicker">Without durability</span>
-                <h3>A crash loses everything</h3>
-                <p>A plain script holds its state in memory. Kill it halfway and the expensive LLM call, the
-                half-edited file, and the knowledge of what already succeeded all disappear.</p>
-            </div>
-            <div class="card red">
-                <span class="kicker">Without durability</span>
-                <h3>A process can't wait for a human</h3>
-                <p>Review may come hours or days later. No ordinary process stays alive that long, and nothing
-                records the pending request if it dies.</p>
-            </div>
-            <div class="card green">
-                <span class="kicker">With Temporal</span>
-                <h3>Progress is checkpointed</h3>
-                <p>Every activity result lands in the event history. Restart the worker and completed steps
-                replay from that history — Claude is never called twice for work already done.</p>
-            </div>
-            <div class="card green">
-                <span class="kicker">With Temporal</span>
-                <h3>Waiting is free and durable</h3>
-                <p><code>workflow.wait_condition(lambda: self.approved)</code> parks the workflow with no
-                process running. The approval signal unblocks it whenever it arrives.</p>
-            </div>
-        </div>
-
-        <h3 style="margin-bottom: 0.75rem;">Four areas the demo covers</h3>
+        <h2 style="margin-bottom: 1.25rem;"><span class="num">01</span> Four areas the demo covers</h2>
         <div class="grid four">
             <div class="card blue">
                 <span class="kicker">Interaction</span>
@@ -305,21 +274,324 @@
                 <p>Workflow sandbox and determinism; workflow-ID reuse policy; schema evolution.</p>
             </div>
         </div>
-
-        <p class="sub" style="margin-top: 1.25rem;">
-            The deck is a stand-in. In production the same shape shows up wherever a multi-step, side-effecting
-            process needs human sign-off — transferring funds, confirming a travel booking, publishing a change.
-        </p>
     </div>
 </section>
 
-<!-- ============ 2. USE CASES ============ -->
+<!-- ============ 2. ARCHITECTURE ============ -->
+<section id="architecture">
+    <div class="container">
+        <h2><span class="num">02</span> Architecture</h2>
+        <p class="lede">
+            Three processes: the Temporal server holding the event history, a worker running the workflow and
+            its activities, and your terminal sending the workflow start, the feedback, and the approval.
+            Claude is reached only from inside activities — never from workflow code, which must stay
+            deterministic.
+        </p>
+
+        <div class="diagram">
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 920 500" role="img" aria-label="Architecture: CLI clients talk to the Temporal server, which dispatches tasks to the worker running the Deck workflow and its activities; activities call the Claude Agent SDK and write the deck file.">
+                <defs>
+                    <marker id="ah" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#6e7681"/>
+                    </marker>
+                    <marker id="ah-b" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#58a6ff"/>
+                    </marker>
+                    <marker id="ah-p" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#d2a8ff"/>
+                    </marker>
+                    <style>
+                        .bx { fill: #161b22; stroke: #30363d; stroke-width: 1; }
+                        .lbl { font-family: ui-monospace, Menlo, monospace; font-size: 12px; fill: #e6edf3; font-weight: 600; }
+                        .sm  { font-family: -apple-system, sans-serif; font-size: 9.5px; fill: #8b949e; }
+                        .cap { font-family: -apple-system, sans-serif; font-size: 10px; fill: #6e7681; letter-spacing: 0.08em; text-transform: uppercase; }
+                        .edge { fill: none; stroke: #6e7681; stroke-width: 1.2; }
+                        .edge-b { fill: none; stroke: #58a6ff; stroke-width: 1.2; }
+                        .edge-p { fill: none; stroke: #d2a8ff; stroke-width: 1.2; }
+                        .etxt { font-family: ui-monospace, Menlo, monospace; font-size: 9px; fill: #8b949e; }
+                    </style>
+                </defs>
+
+                <!-- ---- clients ---- -->
+                <text x="16" y="42" class="cap">Your terminal</text>
+                <rect x="16" y="56" width="160" height="52" rx="8" class="bx"/>
+                <text x="32" y="80" class="lbl">app.py</text>
+                <text x="32" y="96" class="sm">start_workflow(Deck.run)</text>
+
+                <rect x="16" y="136" width="160" height="52" rx="8" class="bx"/>
+                <text x="32" y="160" class="lbl">feedback.py</text>
+                <text x="32" y="176" class="sm">--feedback / --approve</text>
+
+                <rect x="16" y="216" width="160" height="52" rx="8" class="bx"/>
+                <text x="32" y="240" class="lbl">temporal CLI</text>
+                <text x="32" y="256" class="sm">workflow query</text>
+
+                <!-- ---- temporal server ---- -->
+                <text x="224" y="42" class="cap">Durable state</text>
+                <rect x="224" y="56" width="176" height="212" rx="10" fill="#101720" stroke="#1f6feb" stroke-width="1.3"/>
+                <text x="240" y="80" class="lbl" fill="#58a6ff">Temporal Server</text>
+                <text x="240" y="96" class="sm">localhost:7233 · default ns</text>
+                <line x1="240" y1="110" x2="384" y2="110" stroke="#21262d"/>
+                <text x="240" y="130" class="sm" fill="#c9d1d9">▸ Event history</text>
+                <text x="252" y="145" class="sm">every input, result and signal</text>
+                <text x="240" y="170" class="sm" fill="#c9d1d9">▸ Task queue</text>
+                <text x="252" y="185" class="sm">greeting-task-queue</text>
+                <text x="240" y="210" class="sm" fill="#c9d1d9">▸ Timers &amp; retries</text>
+                <text x="252" y="225" class="sm">approval timeout, backoff</text>
+                <text x="240" y="250" class="sm" fill="#c9d1d9">▸ Web UI :8233</text>
+
+                <!-- ---- worker ---- -->
+                <text x="448" y="42" class="cap">worker.py — one process, polls the queue</text>
+                <rect x="448" y="52" width="456" height="240" rx="10" fill="#0f1319" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
+
+                <rect x="466" y="74" width="190" height="200" rx="8" class="bx" stroke="#8957e5"/>
+                <text x="480" y="98" class="lbl" fill="#d2a8ff">Deck workflow</text>
+                <text x="480" y="113" class="sm">deterministic · sandboxed</text>
+                <line x1="480" y1="124" x2="642" y2="124" stroke="#21262d"/>
+                <text x="480" y="143" class="sm" fill="#c9d1d9">@workflow.run</text>
+                <text x="492" y="156" class="sm">generate → wait_condition</text>
+                <text x="480" y="177" class="sm" fill="#c9d1d9">@workflow.update</text>
+                <text x="492" y="190" class="sm">submit_feedback + validator</text>
+                <text x="480" y="211" class="sm" fill="#c9d1d9">@workflow.signal</text>
+                <text x="492" y="224" class="sm">approve</text>
+                <text x="480" y="245" class="sm" fill="#c9d1d9">@workflow.query</text>
+                <text x="492" y="258" class="sm">revision_status → locked?</text>
+
+                <rect x="688" y="74" width="196" height="200" rx="8" class="bx" stroke="#d29922"/>
+                <text x="704" y="98" class="lbl" fill="#d29922">Activities</text>
+                <text x="704" y="113" class="sm">retried · idempotent</text>
+                <line x1="704" y1="124" x2="868" y2="124" stroke="#21262d"/>
+                <text x="704" y="144" class="sm" fill="#c9d1d9">generate_deck</text>
+                <text x="704" y="164" class="sm" fill="#c9d1d9">snapshot_deck</text>
+                <text x="704" y="184" class="sm" fill="#c9d1d9">revise_deck <tspan class="sm">· heartbeats 2s</tspan></text>
+                <text x="704" y="204" class="sm" fill="#c9d1d9">restore_deck <tspan class="sm">· compensation</tspan></text>
+                <text x="704" y="224" class="sm" fill="#c9d1d9">delete_deck <tspan class="sm">· compensation</tspan></text>
+                <text x="704" y="252" class="sm">Two sagas, each unwinding LIFO</text>
+
+                <!-- ---- bottom resources ---- -->
+                <rect x="224" y="392" width="176" height="56" rx="8" class="bx"/>
+                <text x="240" y="416" class="lbl">content/content.md</text>
+                <text x="240" y="432" class="sm">the deck's source content</text>
+
+                <rect x="448" y="392" width="208" height="56" rx="8" class="bx"/>
+                <text x="464" y="416" class="lbl">output/deck_&lt;id&gt;.html</text>
+                <text x="464" y="432" class="sm">+ -backup.html snapshot</text>
+
+                <rect x="688" y="392" width="196" height="56" rx="8" class="bx" stroke="#3fb950"/>
+                <text x="704" y="416" class="lbl" fill="#3fb950">Claude Agent SDK</text>
+                <text x="704" y="432" class="sm">claude-sonnet-5</text>
+
+                <!-- ---- edges ---- -->
+                <path id="e1" class="edge-b" d="M 176 82 L 218 82" marker-end="url(#ah-b)"/>
+                <path id="e2" class="edge-b" d="M 176 162 L 218 162" marker-end="url(#ah-b)"/>
+                <path id="e3" class="edge" d="M 176 242 L 218 242" marker-end="url(#ah)"/>
+                <text x="182" y="76" class="etxt">start</text>
+                <text x="182" y="156" class="etxt">update/signal</text>
+                <text x="182" y="236" class="etxt">query</text>
+
+                <path id="e4" class="edge-b" d="M 400 118 L 460 118" marker-end="url(#ah-b)"/>
+                <text x="404" y="112" class="etxt">task</text>
+                <path id="e5" class="edge" d="M 460 232 L 400 232" marker-end="url(#ah)"/>
+                <text x="404" y="226" class="etxt">result → history</text>
+
+                <path id="e6" class="edge-p" d="M 656 150 L 682 150" marker-end="url(#ah-p)"/>
+                <text x="600" y="290" class="etxt" fill="#d2a8ff">execute_activity</text>
+                <path id="e7" class="edge" d="M 682 200 L 656 200" marker-end="url(#ah)"/>
+
+                <path id="e8" class="edge" d="M 786 292 L 786 386" marker-end="url(#ah)"/>
+                <text x="794" y="340" class="etxt">query(prompt)</text>
+
+                <path id="e9" class="edge" d="M 688 420 L 662 420" marker-end="url(#ah)"/>
+                <path id="e10" class="edge" d="M 330 386 C 330 340, 470 340, 530 316" marker-end="url(#ah)"/>
+                <text x="352" y="356" class="etxt">read</text>
+                <text x="560" y="382" class="etxt">write · tmp + os.replace</text>
+
+                <!-- ---- animated packets ---- -->
+                <g fill="#58a6ff">
+                    <circle r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite" begin="0s"><mpath href="#e1" xlink:href="#e1"/></animateMotion></circle>
+                    <circle r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite" begin="1.3s"><mpath href="#e2" xlink:href="#e2"/></animateMotion></circle>
+                    <circle r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite" begin="0.4s"><mpath href="#e4" xlink:href="#e4"/></animateMotion></circle>
+                </g>
+                <g fill="#d2a8ff">
+                    <circle r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite" begin="0.9s"><mpath href="#e6" xlink:href="#e6"/></animateMotion></circle>
+                </g>
+                <g fill="#3fb950">
+                    <circle r="3.5"><animateMotion dur="3s" repeatCount="indefinite" begin="1.4s"><mpath href="#e8" xlink:href="#e8"/></animateMotion></circle>
+                    <circle r="3.5"><animateMotion dur="2.2s" repeatCount="indefinite" begin="2.2s"><mpath href="#e9" xlink:href="#e9"/></animateMotion></circle>
+                </g>
+                <g fill="#8b949e">
+                    <circle r="3"><animateMotion dur="3.2s" repeatCount="indefinite" begin="1.8s"><mpath href="#e5" xlink:href="#e5"/></animateMotion></circle>
+                    <circle r="3"><animateMotion dur="3.2s" repeatCount="indefinite" begin="0.6s"><mpath href="#e10" xlink:href="#e10"/></animateMotion></circle>
+                </g>
+
+                <!-- ---- footnote ---- -->
+                <text x="16" y="480" class="sm">Workflow code never calls Claude or touches the filesystem — only activities do, so replay stays deterministic.</text>
+            </svg>
+        </div>
+
+        <h3 style="margin: 2rem 0 0.5rem;">Happy-path sequence</h3>
+        <p class="sub" style="margin-bottom: 1rem;">
+            The six lifelines from the README, animated: every message travels the path the data actually takes,
+            in order. Click any message to jump to it.
+        </p>
+
+        <div class="player seq-player">
+            <div class="player-bar">
+                <div class="tabrow"><span class="seq-caption" id="seq-caption"></span></div>
+                <button class="playbtn" id="seq-all" aria-pressed="false" aria-label="Show every message at once">⊞ Show all</button>
+                <button class="playbtn" id="seq-toggle" aria-label="Pause or play the sequence">⏸ Pause</button>
+            </div>
+            <div class="seqwrap"><svg id="seq" xmlns="http://www.w3.org/2000/svg" role="img"
+                aria-label="Sequence diagram of the happy path: app.py starts the workflow, generate_deck calls Claude and writes the deck, feedback is submitted as an update that snapshots and revises the deck, and the approve signal completes the run. A right-hand gutter marks which of the fifteen failure cases can strike at each message."></svg></div>
+        </div>
+        <p class="sub" style="margin-top: 0.6rem;">
+            The red gutter marks where the README's failure cases can strike this path — cases 1&ndash;14 each
+            land on one of these nine messages. A <strong style="color:#f85149;">✗</strong> on a lifeline shows
+            <em>who</em> dies at that event: the worker process, the Claude call, the workflow run or the rejected
+            update handler. The amber band down <code>submit_feedback()</code> is the revision lock: 🔒 where it is
+            acquired, open where it is released, and a second feedback blocks for that whole stretch (Case 9).
+            Click any marker to jump there; the caption names the casualty.
+        </p>
+
+        <h3 style="margin: 2.25rem 0 0.35rem;">Every failure case</h3>
+        <p class="sub" style="margin-bottom: 0.9rem;">
+            The fourteen cases the markers above point at — where each one strikes, what goes wrong, and the
+            mechanism that handles it.
+        </p>
+
+        <div class="tablewrap">
+        <table class="ftable">
+            <thead>
+                <tr><th>Failure point</th><th>Failure description</th><th>Solution</th></tr>
+            </thead>
+            <tbody>
+                <tr class="grouprow"><th colspan="3">Deck.run() — the workflow</th></tr>
+
+                <tr>
+                    <td><span class="tag">Case 1</span><span class="pt">query(prompt) → Claude</span><span class="dies">✗ Claude Agent SDK</span></td>
+                    <td>Retries exhausted. <code>generate_deck</code> fails on every attempt — a network error,
+                        <code>ClaudeAgentFailed</code>, or an empty result.</td>
+                    <td>Retry policy gives 3 attempts (5s → 10s backoff). The write is <code>.tmp</code> +
+                        <code>os.replace</code>, so no partial deck is ever visible. After attempt 3,
+                        <code>saga.compensate()</code> runs <code>delete_deck(delete_all=True)</code> and the run FAILS
+                        with nothing on disk.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 2</span><span class="pt">query(prompt) → Claude</span><span class="dies">✗ Claude Agent SDK</span></td>
+                    <td>Terminal error. Claude reports "Not logged in" — no amount of retrying will fix it.</td>
+                    <td><code>_as_temporal_error</code> maps it to <code>ApplicationError(type="Unauthorized",
+                        non_retryable=True)</code>, which is listed in <code>non_retryable_error_types</code>.
+                        Attempts 2 and 3 are skipped and compensation runs at once, saving ~35s of pointless backoff.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 3</span><span class="pt">wait_condition(approved)</span><span class="dies">✗ Deck.run()</span></td>
+                    <td>The human never responds. A plain script cannot wait hours for a reviewer, and cannot survive
+                        a restart while it waits.</td>
+                    <td><code>wait_condition(approved, timeout=3m)</code> is a durable timer in the event history — the
+                        worker can restart mid-wait and it still fires. On expiry the run raises
+                        <code>ApprovalTimeout</code>, drains in-flight handlers, then
+                        <code>delete_deck(delete_all=True)</code> removes deck, backup and <code>.tmp</code>.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 4</span><span class="pt">execute_activity(generate_deck)</span><span class="dies">✗ Activity worker</span></td>
+                    <td>The worker dies mid-activity. <code>generate_deck</code> sends no heartbeats, so Temporal
+                        cannot tell a slow Claude call from a dead process.</td>
+                    <td><code>start_to_close=5m</code> bounds the damage: at 5 minutes the attempt is failed and
+                        retried. On restart the workflow replays from history — <code>saga.add</code> is re-applied
+                        deterministically and no completed activity is re-run. (Compare Case 10, detected in ~30s.)</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 5</span><span class="pt">signal: approve</span></td>
+                    <td>Approval lands while a revision is still running. A naive workflow would return while Claude
+                        is still writing to the deck.</td>
+                    <td><code>finally: wait_condition(all_handlers_finished)</code> holds the workflow open until the
+                        update handler completes. The deck is never cut off half-way; without it Temporal logs an
+                        unfinished-handler warning.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 6</span><span class="pt">approval timer fires</span></td>
+                    <td>Same race as Case 5, but on the timeout path — the deadline expires mid-revision.</td>
+                    <td>The same <code>finally</code> applies. The handler finishes (or fails and runs
+                        <code>restore_deck</code>), and <em>then</em> the run's <code>delete_deck</code> wipes
+                        everything. Both sagas unwind, LIFO within each.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 7</span><span class="pt">workflow cancelled</span></td>
+                    <td>A cancel request is delivered as <code>asyncio.CancelledError</code> inside <code>run()</code>.</td>
+                    <td>Caught by <code>except (Exception, asyncio.CancelledError)</code>, so <code>delete_deck</code>
+                        still runs. Note that <code>submit_feedback</code>'s <code>except Exception</code> does
+                        <strong>not</strong> catch it — a revision in flight skips <code>restore_deck</code>, but
+                        <code>delete_deck</code> cleans up regardless.</td>
+                </tr>
+                <tr class="nofix">
+                    <td><span class="tag">Case 8</span><span class="pt">workflow terminated</span></td>
+                    <td>Terminate stops the workflow at the server without running any workflow code at all.</td>
+                    <td><strong>None.</strong> No saga runs; the deck, the backup and any <code>.tmp</code> files are
+                        left on disk. This is the one failure mode Temporal cannot help with — prefer cancel over
+                        terminate.</td>
+                </tr>
+
+                <tr class="grouprow"><th colspan="3">submit_feedback() — the update handler</th></tr>
+
+                <tr>
+                    <td><span class="tag">Case 9</span><span class="pt">acquire the revision lock</span></td>
+                    <td>Data corruption. Two feedback updates arrive together and would both edit the same deck.</td>
+                    <td><code>asyncio.Lock</code> serialises them: B waits for the whole of A's revision — the amber
+                        band above — and <code>revision_status</code> reports <code>locked=true</code> meanwhile.
+                        B's snapshot is taken after A finishes, so rolling B back lands on A's deck, not the original.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 10</span><span class="pt">execute_activity(revise_deck)</span><span class="dies">✗ Activity worker</span></td>
+                    <td>The worker dies mid-edit, leaving the deck half-revised on disk. A naive retry would apply the
+                        feedback twice, on top of a partial edit.</td>
+                    <td>Heartbeats every 2s with <code>heartbeat_timeout=30s</code> detect it in ~30s. Each attempt
+                        resets the deck from the snapshot before Claude edits, so the feedback is applied exactly once.
+                        <code>snapshot_deck</code> is not re-run on replay, so the backup stays the true baseline.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 11</span><span class="pt">update: submit_feedback(...)</span><span class="dies">✗ submit_feedback()</span></td>
+                    <td>Wrong sequence of events. Feedback arrives before the deck exists, or the feedback text is
+                        blank.</td>
+                    <td><code>validate_feedback</code> rejects the update before the handler body runs: no lock is
+                        taken, no activity is scheduled, and a rejected update leaves no events in history — so the
+                        caller can simply resend once generation completes.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 12</span><span class="pt">query(prompt, tools=…) → Claude</span><span class="dies">✗ Claude Agent SDK</span></td>
+                    <td>Terminal error during revision — Claude is not logged in.</td>
+                    <td>Same <code>Unauthorized</code> rule as Case 2: retries are skipped and
+                        <code>saga.compensate()</code> runs <code>restore_deck</code>. The update FAILS but the
+                        workflow stays alive, parked on the approval timer.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 13</span><span class="pt">query(prompt, tools=…) → Claude</span><span class="dies">✗ Claude Agent SDK</span></td>
+                    <td>Retries exhausted. All 3 attempts of <code>revise_deck</code> fail, each one having reset from
+                        the snapshot first — so the deck is left holding the last attempt's half-edit.</td>
+                    <td><code>saga.compensate()</code> runs <code>restore_deck</code>, copying the snapshot back over
+                        the deck. It returns to its pre-feedback state, the workflow stays alive, and the next feedback
+                        snapshots a clean baseline.</td>
+                </tr>
+                <tr>
+                    <td><span class="tag">Case 14</span><span class="pt">execute_activity(snapshot_deck)</span><span class="dies">✗ Activity worker</span></td>
+                    <td>The snapshot itself fails. <code>snapshot_deck</code> is fast file I/O but can still hit a disk
+                        or permissions error, and is retried 3×.</td>
+                    <td>If its retries are exhausted, <code>saga.add(restore_deck)</code> was never reached, so
+                        <code>compensate()</code> is a no-op — which is correct, because the deck was never touched.
+                        The update FAILS and the deck is unchanged.</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+</section>
+
+<!-- ============ 3. USE CASES ============ -->
 <section id="use-cases">
     <div class="container">
-        <h2><span class="num">02</span> Use cases the repo exercises</h2>
+        <h2><span class="num">03</span> Use cases the repo exercises</h2>
         <p class="lede">
-            Each scenario is a scripted failure or race you can reproduce live. Green means it has been run
-            end-to-end; amber means it is wired up but not yet demonstrated.
+            Each scenario is a scripted failure or race you can reproduce live — all of them have been run
+            end-to-end against the code in this repo.
         </p>
 
         <div class="grid two">
@@ -409,177 +681,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- ============ 3. ARCHITECTURE ============ -->
-<section id="architecture">
-    <div class="container">
-        <h2><span class="num">03</span> Architecture</h2>
-        <p class="lede">
-            Three processes: the Temporal server holding the event history, a worker running the workflow and
-            its activities, and your terminal sending the workflow start, the feedback, and the approval.
-            Claude is reached only from inside activities — never from workflow code, which must stay
-            deterministic.
-        </p>
-
-        <div class="diagram">
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 920 500" role="img" aria-label="Architecture: CLI clients talk to the Temporal server, which dispatches tasks to the worker running the Deck workflow and its activities; activities call the Claude Agent SDK and write the deck file.">
-                <defs>
-                    <marker id="ah" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#6e7681"/>
-                    </marker>
-                    <marker id="ah-b" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#58a6ff"/>
-                    </marker>
-                    <marker id="ah-p" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto">
-                        <polygon points="0 0, 8 3, 0 6" fill="#d2a8ff"/>
-                    </marker>
-                    <style>
-                        .bx { fill: #161b22; stroke: #30363d; stroke-width: 1; }
-                        .lbl { font-family: ui-monospace, Menlo, monospace; font-size: 12px; fill: #e6edf3; font-weight: 600; }
-                        .sm  { font-family: -apple-system, sans-serif; font-size: 9.5px; fill: #8b949e; }
-                        .cap { font-family: -apple-system, sans-serif; font-size: 10px; fill: #6e7681; letter-spacing: 0.08em; text-transform: uppercase; }
-                        .edge { fill: none; stroke: #6e7681; stroke-width: 1.2; }
-                        .edge-b { fill: none; stroke: #58a6ff; stroke-width: 1.2; }
-                        .edge-p { fill: none; stroke: #d2a8ff; stroke-width: 1.2; }
-                        .etxt { font-family: ui-monospace, Menlo, monospace; font-size: 9px; fill: #8b949e; }
-                    </style>
-                </defs>
-
-                <!-- ---- clients ---- -->
-                <text x="16" y="42" class="cap">Your terminal</text>
-                <rect x="16" y="56" width="160" height="52" rx="8" class="bx"/>
-                <text x="32" y="80" class="lbl">app.py</text>
-                <text x="32" y="96" class="sm">start_workflow(Deck.run)</text>
-
-                <rect x="16" y="136" width="160" height="52" rx="8" class="bx"/>
-                <text x="32" y="160" class="lbl">feedback.py</text>
-                <text x="32" y="176" class="sm">--feedback / --approve</text>
-
-                <rect x="16" y="216" width="160" height="52" rx="8" class="bx"/>
-                <text x="32" y="240" class="lbl">temporal CLI</text>
-                <text x="32" y="256" class="sm">workflow query</text>
-
-                <!-- ---- temporal server ---- -->
-                <text x="224" y="42" class="cap">Durable state</text>
-                <rect x="224" y="56" width="176" height="212" rx="10" fill="#101720" stroke="#1f6feb" stroke-width="1.3"/>
-                <text x="240" y="80" class="lbl" fill="#58a6ff">Temporal Server</text>
-                <text x="240" y="96" class="sm">localhost:7233 · default ns</text>
-                <line x1="240" y1="110" x2="384" y2="110" stroke="#21262d"/>
-                <text x="240" y="130" class="sm" fill="#c9d1d9">▸ Event history</text>
-                <text x="252" y="145" class="sm">every input, result and signal</text>
-                <text x="240" y="170" class="sm" fill="#c9d1d9">▸ Task queue</text>
-                <text x="252" y="185" class="sm">greeting-task-queue</text>
-                <text x="240" y="210" class="sm" fill="#c9d1d9">▸ Timers &amp; retries</text>
-                <text x="252" y="225" class="sm">approval timeout, backoff</text>
-                <text x="240" y="250" class="sm" fill="#c9d1d9">▸ Web UI :8233</text>
-
-                <!-- ---- worker ---- -->
-                <text x="448" y="42" class="cap">worker.py — one process, polls the queue</text>
-                <rect x="448" y="52" width="456" height="240" rx="10" fill="#0f1319" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
-
-                <rect x="466" y="74" width="190" height="200" rx="8" class="bx" stroke="#8957e5"/>
-                <text x="480" y="98" class="lbl" fill="#d2a8ff">Deck workflow</text>
-                <text x="480" y="113" class="sm">deterministic · sandboxed</text>
-                <line x1="480" y1="124" x2="642" y2="124" stroke="#21262d"/>
-                <text x="480" y="143" class="sm" fill="#c9d1d9">@workflow.run</text>
-                <text x="492" y="156" class="sm">generate → wait_condition</text>
-                <text x="480" y="177" class="sm" fill="#c9d1d9">@workflow.update</text>
-                <text x="492" y="190" class="sm">submit_feedback + validator</text>
-                <text x="480" y="211" class="sm" fill="#c9d1d9">@workflow.signal</text>
-                <text x="492" y="224" class="sm">approve</text>
-                <text x="480" y="245" class="sm" fill="#c9d1d9">@workflow.query</text>
-                <text x="492" y="258" class="sm">revision_status → locked?</text>
-
-                <rect x="688" y="74" width="196" height="200" rx="8" class="bx" stroke="#d29922"/>
-                <text x="704" y="98" class="lbl" fill="#d29922">Activities</text>
-                <text x="704" y="113" class="sm">retried · idempotent</text>
-                <line x1="704" y1="124" x2="868" y2="124" stroke="#21262d"/>
-                <text x="704" y="144" class="sm" fill="#c9d1d9">generate_deck</text>
-                <text x="704" y="164" class="sm" fill="#c9d1d9">snapshot_deck</text>
-                <text x="704" y="184" class="sm" fill="#c9d1d9">revise_deck <tspan class="sm">· heartbeats 2s</tspan></text>
-                <text x="704" y="204" class="sm" fill="#c9d1d9">delete_deck <tspan class="sm">· compensation</tspan></text>
-                <text x="704" y="224" class="sm" fill="#6e7681">restore_deck <tspan class="sm">· registered, unused</tspan></text>
-                <text x="704" y="252" class="sm">Saga (in run) unwinds LIFO</text>
-
-                <!-- ---- bottom resources ---- -->
-                <rect x="224" y="392" width="176" height="56" rx="8" class="bx"/>
-                <text x="240" y="416" class="lbl">content/content.md</text>
-                <text x="240" y="432" class="sm">the deck's source content</text>
-
-                <rect x="448" y="392" width="208" height="56" rx="8" class="bx"/>
-                <text x="464" y="416" class="lbl">output/deck_&lt;id&gt;.html</text>
-                <text x="464" y="432" class="sm">+ -backup.html snapshot</text>
-
-                <rect x="688" y="392" width="196" height="56" rx="8" class="bx" stroke="#3fb950"/>
-                <text x="704" y="416" class="lbl" fill="#3fb950">Claude Agent SDK</text>
-                <text x="704" y="432" class="sm">claude-sonnet-5</text>
-
-                <!-- ---- edges ---- -->
-                <path id="e1" class="edge-b" d="M 176 82 L 218 82" marker-end="url(#ah-b)"/>
-                <path id="e2" class="edge-b" d="M 176 162 L 218 162" marker-end="url(#ah-b)"/>
-                <path id="e3" class="edge" d="M 176 242 L 218 242" marker-end="url(#ah)"/>
-                <text x="182" y="76" class="etxt">start</text>
-                <text x="182" y="156" class="etxt">update/signal</text>
-                <text x="182" y="236" class="etxt">query</text>
-
-                <path id="e4" class="edge-b" d="M 400 118 L 460 118" marker-end="url(#ah-b)"/>
-                <text x="404" y="112" class="etxt">task</text>
-                <path id="e5" class="edge" d="M 460 232 L 400 232" marker-end="url(#ah)"/>
-                <text x="404" y="226" class="etxt">result → history</text>
-
-                <path id="e6" class="edge-p" d="M 656 150 L 682 150" marker-end="url(#ah-p)"/>
-                <text x="600" y="290" class="etxt" fill="#d2a8ff">execute_activity</text>
-                <path id="e7" class="edge" d="M 682 200 L 656 200" marker-end="url(#ah)"/>
-
-                <path id="e8" class="edge" d="M 786 292 L 786 386" marker-end="url(#ah)"/>
-                <text x="794" y="340" class="etxt">query(prompt)</text>
-
-                <path id="e9" class="edge" d="M 688 420 L 662 420" marker-end="url(#ah)"/>
-                <path id="e10" class="edge" d="M 330 386 C 330 340, 470 340, 530 316" marker-end="url(#ah)"/>
-                <text x="352" y="356" class="etxt">read</text>
-                <text x="560" y="382" class="etxt">write · tmp + os.replace</text>
-
-                <!-- ---- animated packets ---- -->
-                <g fill="#58a6ff">
-                    <circle r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite" begin="0s"><mpath href="#e1" xlink:href="#e1"/></animateMotion></circle>
-                    <circle r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite" begin="1.3s"><mpath href="#e2" xlink:href="#e2"/></animateMotion></circle>
-                    <circle r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite" begin="0.4s"><mpath href="#e4" xlink:href="#e4"/></animateMotion></circle>
-                </g>
-                <g fill="#d2a8ff">
-                    <circle r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite" begin="0.9s"><mpath href="#e6" xlink:href="#e6"/></animateMotion></circle>
-                </g>
-                <g fill="#3fb950">
-                    <circle r="3.5"><animateMotion dur="3s" repeatCount="indefinite" begin="1.4s"><mpath href="#e8" xlink:href="#e8"/></animateMotion></circle>
-                    <circle r="3.5"><animateMotion dur="2.2s" repeatCount="indefinite" begin="2.2s"><mpath href="#e9" xlink:href="#e9"/></animateMotion></circle>
-                </g>
-                <g fill="#8b949e">
-                    <circle r="3"><animateMotion dur="3.2s" repeatCount="indefinite" begin="1.8s"><mpath href="#e5" xlink:href="#e5"/></animateMotion></circle>
-                    <circle r="3"><animateMotion dur="3.2s" repeatCount="indefinite" begin="0.6s"><mpath href="#e10" xlink:href="#e10"/></animateMotion></circle>
-                </g>
-
-                <!-- ---- footnote ---- -->
-                <text x="16" y="480" class="sm">Workflow code never calls Claude or touches the filesystem — only activities do, so replay stays deterministic.</text>
-            </svg>
-        </div>
-
-        <h3 style="margin: 2rem 0 0.5rem;">Execution, step by step</h3>
-        <p class="sub" style="margin-bottom: 1rem;">
-            Pick a scenario and watch it play. Click any step to jump to it.
-        </p>
-
-        <div class="player">
-            <div class="player-bar" role="tablist" aria-label="Execution scenarios">
-                <button class="tab" role="tab" data-scenario="happy" aria-selected="true">happy path</button>
-                <button class="tab" role="tab" data-scenario="timeout" aria-selected="false">nobody approves</button>
-                <button class="tab" role="tab" data-scenario="revfail" aria-selected="false">revision fails</button>
-                <button class="tab" role="tab" data-scenario="crash" aria-selected="false">crash → resume</button>
-                <button class="tab" role="tab" data-scenario="race" aria-selected="false">two reviewers</button>
-                <button class="playbtn" id="toggle" aria-label="Pause or play the walkthrough">⏸ Pause</button>
-            </div>
-            <ol class="steps" id="steps"></ol>
         </div>
     </div>
 </section>
@@ -736,137 +837,317 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
 </footer>
 
 <script>
-const SCENARIOS = {
-  happy: [
-    ["app.py starts the workflow", "A run is created as <code>deck-workflow-&lt;8 hex&gt;</code> and Temporal writes <code>WorkflowExecutionStarted</code> to the event history.", "start"],
-    ["The saga registers its first undo", "Before anything is created, <code>delete_deck(delete_all=True)</code> goes on the compensation stack, so a later failure can leave no files behind.", "saga"],
-    ["generate_deck runs", "The activity reads <code>content/content.md</code> and asks Claude for a self-contained HTML deck — no tools, no file writes from the model.", "activity"],
-    ["The deck is written atomically", "Output goes to a <code>.tmp</code> file, then <code>os.replace</code> swaps it into <code>output/deck_&lt;id&gt;.html</code>.", "io"],
-    ["The workflow parks on wait_condition", "<code>await workflow.wait_condition(lambda: self.approved)</code>. No process needs to stay alive — the wait lives in the event history.", "wait"],
-    ["feedback.py sends an update", "The validator checks the deck exists and the text is non-empty, then <code>submit_feedback</code> takes the revision lock.", "update"],
-    ["snapshot_deck takes a backup", "The deck is copied to <code>deck_&lt;id&gt;-backup.html</code>. That snapshot is the recovery point every retry of the revision rewinds to.", "activity"],
-    ["revise_deck edits in place", "Claude gets Read/Edit/Write on that one file and heartbeats every 2 seconds so a stall is detected quickly.", "activity"],
-    ["feedback.py --approve", "The <code>approve</code> signal sets <code>approved = True</code> and the wait unblocks.", "signal"],
-    ["The workflow drains and completes", "<code>wait_condition(workflow.all_handlers_finished)</code> makes sure no revision is still running, then the run returns its result.", "done"]
-  ],
-  timeout: [
-    ["The deck is ready and waiting", "<code>generate_deck</code> succeeded and the workflow is parked on <code>wait_condition(lambda: self.approved, timeout=...)</code>.", "wait"],
-    ["A durable timer is armed", "The deadline lives in the event history on the server, not in the worker. The demo uses a short 3-minute timeout; production would use hours or days.", "detect"],
-    ["Nobody signals — and nothing burns", "No process is blocked, no thread is parked, no polling loop runs. You can shut the worker down for the whole wait and the deadline still holds.", "wait"],
-    ["The timer fires", "<code>wait_condition</code> raises <code>asyncio.TimeoutError</code> inside the workflow, exactly as if a real reviewer had gone silent.", "error"],
-    ["It becomes a terminal business error", "Re-raised as <code>ApplicationError(type=\"ApprovalTimeout\", non_retryable=True)</code> — an expired review is a decision, not a transient fault, so retrying would be wrong.", "error"],
-    ["In-flight handlers drain first", "The <code>finally</code> block still awaits <code>all_handlers_finished</code>, so a revision that was running is never abandoned mid-edit.", "lock"],
-    ["The saga unwinds and deletes the deck", "<code>saga.compensate()</code> pops the compensation that was registered <em>before</em> generation ever started and runs <code>delete_deck(delete_all=True)</code> as a real, retried activity.", "saga"],
-    ["Every file the run produced is removed", "<code>agents/output/deck_&lt;id&gt;.html</code>, its <code>deck_&lt;id&gt;-backup.html</code> snapshot and any leftover <code>.tmp</code> files are all deleted. The hours of Claude work are thrown away on purpose — an unapproved deck must not survive.", "cleanup"],
-    ["Nothing is left half-done", "The alternative — a plain script dying at the timeout — leaves an unreviewed deck on disk that someone later mistakes for approved. Here the disk is back exactly where it started.", "cleanup"],
-    ["The run ends Failed, on purpose", "The Web UI shows <code>ApprovalTimeout</code> plus the full history of what was built and then cleaned up. Start a new run to try again.", "done"]
-  ],
-  revfail: [
-    ["A revision is under way", "The deck exists, feedback arrived, and <code>snapshot_deck</code> has already written <code>deck_&lt;id&gt;-backup.html</code>.", "update"],
-    ["Attempt 1 rewinds, then edits", "<code>revise_deck</code> copies the backup over the deck before calling Claude, so the attempt always starts from a known state.", "activity"],
-    ["Attempt 1 fails after editing", "Claude has already changed part of the file when the run errors out. The deck on disk is now half-revised.", "error"],
-    ["Temporal retries — no rollback needed", "<code>ClaudeAgentFailed</code> is retryable, so attempt 2 is scheduled after backoff. Nothing has to be undone in between.", "detect"],
-    ["Attempt 2 rewinds first", "The same three lines at the top of the activity reset the deck from the snapshot, discarding attempt 1's partial work. The feedback lands exactly once instead of being applied twice.", "activity"],
-    ["A terminal error skips the retries", "If Claude is simply logged out, the error is mapped to <code>ApplicationError(type=\"Unauthorized\", non_retryable=True)</code>. It fails on attempt 1 — and since the rewind happens before Claude is called, the deck is already back at its pre-feedback state.", "error"],
-    ["The caller learns it failed", "Because feedback is an <em>update</em> rather than a signal, the error surfaces in the <code>feedback.py</code> terminal instead of disappearing into a log.", "update"],
-    ["The snapshot stays on disk", "<code>deck_&lt;id&gt;-backup.html</code> is kept, so the pre-feedback deck is still recoverable — and the next round of feedback overwrites it with a fresh snapshot.", "io"],
-    ["The run's own saga is untouched", "<code>delete_deck(delete_all=True)</code> was registered before generation and is still armed. A failed revision does not fire it; a failed <em>run</em> does.", "saga"]
-  ],
-  crash: [
-    ["An activity is in flight", "<code>revise_deck</code> is mid-edit and heartbeating every 2 seconds.", "activity"],
-    ["The worker is killed", "Ctrl+C. The process, the asyncio loop and every in-memory variable are gone.", "error"],
-    ["Temporal notices the silence", "The heartbeat timeout expires, the activity task is marked failed, and it is put back on the task queue.", "detect"],
-    ["A worker starts again", "<code>python worker.py</code> polls the same <code>greeting-task-queue</code> — it can be a different machine entirely.", "start"],
-    ["The workflow replays", "Completed activities are reconstructed from the event history rather than re-executed. Claude is not called again for work already finished.", "replay"],
-    ["Only the unfinished step re-runs", "Attempt 2 of <code>revise_deck</code> first resets the deck from the snapshot, so the feedback is applied once — not stacked on a half-finished edit.", "activity"],
-    ["The run continues as if nothing happened", "It arrives back at the approval wait with correct state.", "done"]
-  ],
-  race: [
-    ["Two reviewers send feedback at once", "Update A and update B reach the running workflow within the same moment.", "update"],
-    ["Both pass validation", "Each validator only checks that the deck exists and the text is non-empty — neither is rejected.", "update"],
-    ["A acquires the revision lock", "<code>async with self.revision_in_progress_lock</code>. B suspends at the same line instead of racing A.", "lock"],
-    ["A query confirms the state", "<code>temporal workflow query --type revision_status</code> returns <code>{\"locked\": true}</code> while A is working.", "query"],
-    ["A snapshots and revises", "Backup, then edit. B has not touched the file at all.", "activity"],
-    ["The lock releases and B proceeds", "B snapshots A's <em>result</em> and revises on top of it — serialized, never interleaved.", "lock"],
-    ["Approval waits for both", "<code>all_handlers_finished</code> holds completion until no handler is still running.", "done"]
-  ]
-};
+/* ============ animated happy-path sequence diagram ============ */
+(function () {
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 1280, TOP = 112, GAP = 42;
 
-const stepsEl = document.getElementById('steps');
-const toggleEl = document.getElementById('toggle');
-const tabs = [...document.querySelectorAll('.tab')];
-const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const LANES = {
+    cli:  { x:  98, name: 'app.py / feedback.py', sub: 'your terminal' },
+    run:  { x: 294, name: 'Deck.run()',           sub: 'workflow' },
+    upd:  { x: 490, name: 'submit_feedback()',    sub: 'update handler' },
+    wkr:  { x: 686, name: 'Activity worker',      sub: 'activities' },
+    cld:  { x: 862, name: 'Claude Agent SDK',     sub: 'claude-sonnet-5' },
+    disk: { x:1024, name: 'Disk',                 sub: 'agents/output/' }
+  };
 
-let scenario = 'happy';
-let index = 0;
-let timer = null;
-let playing = !reduced;
+  // [from, to, label, kind, caption]
+  const MSGS = [
+    ['cli','run',  'start workflow · deck-workflow-xxxx', 'call', 'app.py starts the run; Temporal records WorkflowExecutionStarted'],
+    ['run','run',  'saga.add(delete_deck)  [registered, not run]', 'self', 'The undo is registered before anything exists to undo'],
+    ['run','wkr',  'execute_activity(generate_deck)', 'call', 'start_to_close=5m and no heartbeat — a dead worker is only noticed at the 5-minute mark'],
+    ['wkr','disk', 'read content.md', 'io', 'The activity reads the source content'],
+    ['wkr','cld',  'query(prompt) · no tools', 'call', 'Claude is asked for a self-contained HTML deck'],
+    ['cld','wkr',  'ResultMessage(html)', 'ret', 'Raw HTML comes back in the result message'],
+    ['wkr','disk', 'write deck.tmp → os.replace', 'io', 'Atomic write: a partial deck is never visible'],
+    ['wkr','run',  'DeckOutput(200) → deck_ready = True', 'ret', 'The result lands in history and unlocks the validator'],
+    ['run','run',  'wait_condition(approved, timeout=3m)  [TIMER STARTS]', 'self', 'The workflow parks. The timer is durable; no process need stay alive'],
+    ['cli','upd',  'update: submit_feedback("add slide")', 'call', 'Feedback arrives as an update, not a signal — it returns a result'],
+    ['upd','upd',  'validator ok → acquire the revision lock', 'self', 'revision_status now answers {"locked": true}'],
+    ['upd','wkr',  'execute_activity(snapshot_deck)', 'call', 'Back up before touching anything'],
+    ['wkr','disk', 'copy → deck_<id>-backup.html', 'io', 'The snapshot every retry will rewind to'],
+    ['wkr','upd',  'SnapshotResult(created=True)', 'ret', 'Only a real snapshot earns a compensation'],
+    ['upd','upd',  'saga.add(restore_deck)  [registered, not run]', 'self', 'Registered the instant the snapshot succeeds — never before'],
+    ['upd','wkr',  'execute_activity(revise_deck)', 'call', 'heartbeat_timeout=30s — a dead worker is now detected in ~30s, not 5 minutes'],
+    ['wkr','disk', 'reset deck from backup', 'io', 'Every attempt starts from the snapshot — this is the idempotency'],
+    ['wkr','cld',  'query(prompt, tools=Read/Edit/Write)', 'call', 'Heartbeating every 2s; permission_mode="acceptEdits", scoped to the one file'],
+    ['cld','disk', 'Claude edits deck_<id>.html directly', 'io', 'The model writes the file itself — inside an activity, never in workflow code'],
+    ['cld','wkr',  'ResultMessage', 'ret', 'The edit session ends'],
+    ['wkr','upd',  'result_text', 'ret', 'The activity result is recorded in history'],
+    ['upd','cli',  '"Revised Deck: ..." · release lock', 'ret', 'The update returns to the caller that sent it'],
+    ['cli','run',  'signal: approve', 'sig', 'Fire-and-forget; signals have no validator and no return value'],
+    ['run','run',  'approved = True → wait_condition unblocks  [TIMER CANCELLED]', 'self', 'The durable timer is discarded'],
+    ['run','run',  'finally: wait_condition(all_handlers_finished)  [no-op]', 'self', 'Here the handler is already done — but this is what Case 5 depends on'],
+    ['run','cli',  'workflow COMPLETED · deck + backup kept', 'ret', 'A success path: neither saga is compensated']
+  ];
 
-function render() {
-  const steps = SCENARIOS[scenario];
-  stepsEl.innerHTML = steps.map(([title, detail, tag], i) => `
-    <li class="step" data-i="${i}">
-      <span class="marker">${i + 1}</span>
-      <span>
-        <span class="title">${title}<span class="tag">${tag}</span></span>
-        <span class="detail">${detail}</span>
-      </span>
-    </li>`).join('');
-  stepsEl.querySelectorAll('.step').forEach(el => {
-    el.addEventListener('click', () => { index = +el.dataset.i; paint(); pause(); });
+
+  // failure cases from the README, keyed by the message they can strike at
+  const RISKS = {
+    2:  { cases: '4', dies: 'wkr',      text: 'Worker dies here and <code>generate_deck</code> has no heartbeat — Temporal cannot tell a slow Claude call from a dead worker, so it waits the full <code>start_to_close=5m</code> before retrying.' },
+    4:  { cases: '1 · 2', dies: 'cld',  text: 'Claude fails (<code>ClaudeAgentFailed</code>, <code>EmptyResult</code>) → 3 attempts, then <code>delete_deck</code> and the run FAILS. If it is "Not logged in" → <code>Unauthorized</code>, non-retryable, compensation runs at once.' },
+    8:  { cases: '3 · 7 · 8', dies: 'run', text: 'Nobody approves → the 3m timer fires <code>ApprovalTimeout</code> and <code>delete_deck(delete_all=True)</code> wipes everything. Cancel is caught and compensates too; <b>Terminate</b> runs no workflow code at all and leaves the files behind.' },
+    9:  { cases: '11', dies: 'upd',     text: 'Sent too early, the validator rejects it — <code>deck_ready</code> is False. No lock, no activity, no event in history.' },
+    10: { cases: '9',      text: 'A second feedback contends here. The amber band shows how long <code>revision_in_progress_lock</code> is held — B blocks for all of it, then snapshots A&rsquo;s result, not the original.' },
+    11: { cases: '14', dies: 'wkr',     text: 'If <code>snapshot_deck</code> exhausts its retries, <code>saga.add(restore_deck)</code> is never reached — so compensation is a no-op, which is correct: the deck was never touched.' },
+    15: { cases: '10', dies: 'wkr',     text: 'Worker dies mid-edit. Heartbeats every 2s mean it is caught in ~30s, and attempt 2 rewinds from the snapshot so the feedback applies exactly once.' },
+    17: { cases: '12 · 13', dies: 'cld', text: '<code>Unauthorized</code> skips the retries; a retryable failure burns all 3 attempts. Either way <code>restore_deck</code> puts the deck back and the workflow stays alive.' },
+    22: { cases: '5 · 6',  text: 'If this lands mid-revision, <code>all_handlers_finished</code> holds the workflow open until the edit completes. Same guard when the <i>timer</i> fires instead — the handler finishes, then <code>delete_deck</code> wipes everything.' },
+  };
+
+  const COLOR = { call:'#58a6ff', ret:'#8b949e', self:'#d2a8ff', io:'#3fb950', sig:'#d29922' };
+  const H = TOP + MSGS.length * GAP + 26;
+
+  const svg = document.getElementById('seq');
+  const capEl = document.getElementById('seq-caption');
+  const btn = document.getElementById('seq-toggle');
+  const allBtn = document.getElementById('seq-all');
+  if (!svg) return;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+  // arrowheads, one per colour
+  const defs = el('defs');
+  for (const k in COLOR) {
+    const m = el('marker', { id: 'sq-' + k, markerWidth: 8, markerHeight: 6, refX: 7.5, refY: 3, orient: 'auto' });
+    m.appendChild(el('polygon', { points: '0 0, 8 3, 0 6', fill: COLOR[k] }));
+    defs.appendChild(m);
+  }
+  svg.appendChild(defs);
+
+  // lifelines + headers
+  const PAD = 26, MIN_GAP = 18, MIN_BOX = 84;
+  const order = Object.keys(LANES);
+
+  for (const id of order) {
+    const L = LANES[id];
+    svg.appendChild(el('line', { x1: L.x, y1: 72, x2: L.x, y2: H - 10, stroke: '#30363d', 'stroke-width': 1, 'stroke-dasharray': '3,4' }));
+    L.box = el('rect', { x: L.x, y: 14, width: 0, height: 58, rx: 9, fill: '#161b22', stroke: '#30363d' });
+    svg.appendChild(L.box);
+    const t1 = el('text', { x: L.x, y: 40, 'text-anchor': 'middle', fill: '#e6edf3', 'font-size': 14, 'font-family': 'ui-monospace, Menlo, monospace', 'font-weight': 600 });
+    t1.textContent = L.name; svg.appendChild(t1);
+    const t2 = el('text', { x: L.x, y: 59, 'text-anchor': 'middle', fill: '#6e7681', 'font-size': 11, 'font-family': '-apple-system, sans-serif' });
+    t2.textContent = L.sub; svg.appendChild(t2);
+    // size each box to its own text, not to a fixed width
+    const measure = t => { try { const n = t.getComputedTextLength(); return n > 0 ? n : 0; } catch (e) { return 0; } };
+    const est = Math.max(L.name.length * 8.4, L.sub.length * 6.4);
+    L.w = Math.max(measure(t1), measure(t2), est) + PAD;
+  }
+
+  // never let two headers touch: shrink the offending pair until a gap opens
+  for (let n = 0; n < 4; n++) {
+    let clash = false;
+    for (let i = 0; i < order.length - 1; i++) {
+      const A = LANES[order[i]], B = LANES[order[i + 1]];
+      const over = (A.w / 2 + B.w / 2 + MIN_GAP) - (B.x - A.x);
+      if (over > 0.5) {
+        clash = true;
+        A.w = Math.max(MIN_BOX, A.w - over / 2);
+        B.w = Math.max(MIN_BOX, B.w - over / 2);
+      }
+    }
+    if (!clash) break;
+  }
+  for (const id of order) {
+    const L = LANES[id];
+    L.box.setAttribute('width', L.w);
+    L.box.setAttribute('x', L.x - L.w / 2);
+  }
+
+  // ---- Case 9: the revision lock, held from acquire to release ----
+  const LOCK = { lane: 'upd', from: 10, to: 21 };
+  const lockBand = el('g', { class: 'lockband' });
+  svg.appendChild(lockBand);                      // under the messages, so arrows stay readable
+  const lockIcons = el('g', { class: 'lockband' });
+
+  function padlock(cx, cy, open) {
+    const g = el('g', {});
+    g.appendChild(el('circle', { cx, cy, r: 11, fill: '#0b0f15', stroke: '#d29922', 'stroke-width': 1.2 }));
+    g.appendChild(el('rect', { x: cx - 4.5, y: cy - 0.5, width: 9, height: 7, rx: 1.5, fill: '#d29922' }));
+    g.appendChild(el('path', {
+      d: open ? `M ${cx - 3} ${cy - 0.5} v -3 a 3 3 0 0 1 6 -0.6`
+              : `M ${cx - 3} ${cy - 0.5} v -3 a 3 3 0 0 1 6 0 v 3`,
+      fill: 'none', stroke: '#d29922', 'stroke-width': 1.5, 'stroke-linecap': 'round' }));
+    return g;
+  }
+
+  {
+    const lx = LANES[LOCK.lane].x;
+    const ly1 = TOP + LOCK.from * GAP, ly2 = TOP + LOCK.to * GAP;
+    lockBand.appendChild(el('rect', { x: lx - 7, y: ly1, width: 14, height: ly2 - ly1, rx: 7,
+                                      fill: 'rgba(210,153,34,0.15)', stroke: '#d29922', 'stroke-width': 1 }));
+    const vt = el('text', { x: lx - 26, y: (ly1 + ly2) / 2, fill: '#d29922', 'font-size': 10.5,
+                            'text-anchor': 'middle', 'font-family': 'ui-monospace, Menlo, monospace',
+                            transform: `rotate(-90 ${lx - 26} ${(ly1 + ly2) / 2})` });
+    vt.textContent = 'revision_in_progress_lock held — B waits here';
+    lockBand.appendChild(vt);
+    const t1 = el('title'); t1.textContent = 'Case 9 — the lock is held for the whole revision';
+    lockBand.appendChild(t1);
+
+    const acq = padlock(lx, ly1, false), rel = padlock(lx, ly2, true);
+    acq.appendChild(Object.assign(el('title'), { textContent: 'Lock acquired — a second feedback blocks here' }));
+    rel.appendChild(Object.assign(el('title'), { textContent: 'Lock released — B may now proceed' }));
+    lockIcons.appendChild(acq); lockIcons.appendChild(rel);
+  }
+
+  // failure-point gutter
+  const RX = 1148, RW = 116;
+  svg.appendChild(el('line', { x1: RX - 10, y1: 72, x2: RX - 10, y2: H - 10, stroke: '#21262d', 'stroke-width': 1 }));
+  const rh = el('text', { x: RX + RW / 2, y: 46, 'text-anchor': 'middle', fill: '#f85149', 'font-size': 11,
+                          'font-family': 'ui-monospace, Menlo, monospace', opacity: 0.85 });
+  rh.textContent = '⚠ failure points';
+  svg.appendChild(rh);
+
+  const riskLayer = el('g', {});
+  svg.appendChild(riskLayer);
+  const crossLayer = el('g', {});
+  const dots = el('g', {});
+  const groups = [];
+
+  MSGS.forEach(([from, to, label, kind, caption], i) => {
+    const y = TOP + i * GAP;
+    const x1 = LANES[from].x, x2 = LANES[to].x;
+    const g = el('g', { class: 'msg' });
+    g.dataset.i = i;
+    let d, tx, anchor;
+
+    if (from === to) {                       // self-call: out, down, back
+      d = `M ${x1 + 6} ${y - 12} L ${x1 + 58} ${y - 12} L ${x1 + 58} ${y + 8} L ${x1 + 11} ${y + 8}`;
+      tx = x1 + 68; anchor = 'start';
+    } else {
+      const dir = x2 > x1 ? 1 : -1;
+      d = `M ${x1 + 6 * dir} ${y} L ${x2 - 8 * dir} ${y}`;
+      tx = (x1 + x2) / 2; anchor = 'middle';
+    }
+
+    const path = el('path', { d, fill: 'none', stroke: COLOR[kind], 'stroke-width': 1.6, 'marker-end': `url(#sq-${kind})` });
+    if (kind === 'ret') path.setAttribute('stroke-dasharray', '5,3');
+    g.appendChild(path);
+
+    const t = el('text', { x: tx, y: from === to ? y - 2 : y - 8, 'text-anchor': anchor, fill: '#9da7b3', 'font-size': 11.5, 'font-family': 'ui-monospace, Menlo, monospace' });
+    t.textContent = label;
+    g.appendChild(t);
+
+    g.addEventListener('click', () => { if (allOn) setAll(false); stop(); show(i); });
+    svg.appendChild(g);
+
+    let badge = null;
+    const risk = RISKS[i];
+    if (risk) {
+      badge = el('g', { class: 'risk', opacity: 0.5, style: 'cursor:pointer' });
+      badge.appendChild(el('rect', { x: RX, y: y - 12, width: RW, height: 24, rx: 12,
+                                     fill: 'rgba(248,81,73,0.12)', stroke: '#f85149', 'stroke-width': 1 }));
+      const bt = el('text', { x: RX + RW / 2, y: y + 4.5, 'text-anchor': 'middle', fill: '#f85149',
+                              'font-size': 11, 'font-family': 'ui-monospace, Menlo, monospace' });
+      bt.textContent = 'Case ' + risk.cases;
+      badge.appendChild(bt);
+      badge.appendChild(el('line', { x1: RX - 10, y1: y, x2: RX, y2: y, stroke: '#f85149',
+                                     'stroke-width': 1, 'stroke-dasharray': '2,2', opacity: 0.6 }));
+      badge.addEventListener('click', () => { if (allOn) setAll(false); stop(); show(i); });
+      riskLayer.appendChild(badge);
+    }
+
+    let cross = null;
+    if (risk && risk.dies) {
+      const cx = LANES[risk.dies].x;
+      cross = el('g', { class: 'cross' });
+      cross.appendChild(el('circle', { cx, cy: y, r: 11, fill: '#0b0f15', stroke: '#f85149', 'stroke-width': 1.2 }));
+      cross.appendChild(el('path', {
+        d: `M ${cx - 5.4} ${y - 5.4} L ${cx + 5.4} ${y + 5.4} M ${cx + 5.4} ${y - 5.4} L ${cx - 5.4} ${y + 5.4}`,
+        stroke: '#f85149', 'stroke-width': 2.4, 'stroke-linecap': 'round', fill: 'none' }));
+      const tip = el('title');
+      tip.textContent = `${LANES[risk.dies].name} dies here — Case ${risk.cases}`;
+      cross.appendChild(tip);
+      cross.addEventListener('click', () => { if (allOn) setAll(false); stop(); show(i); });
+      crossLayer.appendChild(cross);
+    }
+
+    groups.push({ g, path, caption, label, kind, risk, badge, cross });
   });
-  paint();
-}
+  svg.appendChild(lockIcons);
+  svg.appendChild(crossLayer);
+  svg.appendChild(dots);
 
-function paint() {
-  stepsEl.querySelectorAll('.step').forEach((el, i) => {
-    el.classList.toggle('active', i === index && !reduced);
-    el.classList.toggle('done', i < index || reduced);
-    if (reduced) el.style.opacity = 1;
-  });
-}
+  let cur = -1, timer = null, playing = !reducedMotion, allOn = false;
 
-function tick() {
-  index = (index + 1) % SCENARIOS[scenario].length;
-  paint();
-}
+  function setAll(on) {
+    allOn = on;
+    svg.classList.toggle('allon', on);
+    allBtn.textContent = on ? '↺ Animate' : '⊞ Show all';
+    allBtn.setAttribute('aria-pressed', String(on));
+    btn.disabled = on;
+    btn.style.opacity = on ? 0.45 : 1;
+    if (on) {
+      clearInterval(timer);
+      groups.forEach(m => { m.g.classList.remove('on', 'past'); if (m.cross) m.cross.classList.remove('on'); });
+      lockBand.classList.add('on'); lockIcons.classList.add('on');
+      const deaths = groups.filter(m => m.risk && m.risk.dies).length;
+      const points = groups.filter(m => m.risk).length;
+      capEl.innerHTML = `<b>${groups.length} messages</b> &nbsp;${points} failure points &nbsp;·&nbsp; `
+        + `<i>✗ ${deaths} lifeline deaths</i> &nbsp;·&nbsp; the whole path at once`;
+    } else {
+      show(cur < 0 ? 0 : cur);
+      if (playing) start();
+    }
+  }
 
-function play() {
-  if (reduced) return;
-  playing = true;
-  toggleEl.textContent = '⏸ Pause';
-  clearInterval(timer);
-  timer = setInterval(tick, 2600);
-}
+  function show(i) {
+    if (allOn) return;
+    cur = i;
+    groups.forEach((m, j) => {
+      m.g.classList.toggle('on', j === i);
+      m.g.classList.toggle('past', j < i);
+    });
+    const held = i >= LOCK.from && i <= LOCK.to;
+    lockBand.classList.toggle('on', held);
+    lockIcons.classList.toggle('on', held);
+    groups.forEach(o => {
+      if (o.badge) o.badge.setAttribute('opacity', o === groups[i] ? 1 : 0.5);
+      if (o.cross) o.cross.classList.toggle('on', o === groups[i]);
+    });
+    const m = groups[i];
+    capEl.innerHTML = `<b>${i + 1}/${groups.length}</b> &nbsp;${m.caption}`
+      + (m.risk ? `<br><i>⚠ Case ${m.risk.cases}</i>`
+          + (m.risk.dies ? ` <i>✗ ${LANES[m.risk.dies].name} dies here</i>` : '')
+          + ` &nbsp;${m.risk.text}` : '');
+    if (!reducedMotion) fly(m.path, COLOR[m.kind]);
+  }
 
-function pause() {
-  playing = false;
-  toggleEl.textContent = '▶ Play';
-  clearInterval(timer);
-}
+  function fly(path, color) {
+    const len = path.getTotalLength();
+    if (!len) return;
+    const c = el('circle', { r: 5, fill: color });
+    dots.appendChild(c);
+    const t0 = performance.now(), ms = 520;
+    (function frame(now) {
+      const k = Math.min(1, (now - t0) / ms);
+      const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      const p = path.getPointAtLength(len * e);
+      c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
+      if (k < 1) requestAnimationFrame(frame); else c.remove();
+    })(t0);
+  }
 
-toggleEl.addEventListener('click', () => (playing ? pause() : play()));
+  function tick() { show((cur + 1) % groups.length); }
+  function start() { if (reducedMotion) return; playing = true; btn.textContent = '⏸ Pause'; clearInterval(timer); timer = setInterval(tick, 1600); }
+  function stop() { playing = false; btn.textContent = '▶ Play'; clearInterval(timer); }
 
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    tabs.forEach(t => t.setAttribute('aria-selected', String(t === tab)));
-    scenario = tab.dataset.scenario;
-    index = 0;
-    render();
-    if (playing) play();
-  });
-});
+  btn.addEventListener('click', () => { if (!allOn) playing ? stop() : start(); });
+  allBtn.addEventListener('click', () => setAll(!allOn));
 
-// Only animate while the walkthrough is actually on screen.
-const io = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) { if (playing) play(); }
-    else clearInterval(timer);
-  });
-}, { threshold: 0.15 });
-
-render();
-if (reduced) { toggleEl.style.display = 'none'; } else { io.observe(stepsEl); play(); }
+  if (reducedMotion) {
+    btn.style.display = 'none';
+    setAll(true);
+  } else {
+    show(0);
+    new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting) { if (playing) start(); } else clearInterval(timer);
+    }), { threshold: 0.08 }).observe(svg);
+    start();
+  }
+})();
 </script>
 </body>
 </html>
