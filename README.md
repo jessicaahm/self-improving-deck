@@ -333,6 +333,9 @@ Client                    Workflow (update handler)              Activities     
   |                              |-- release lock, raise              |                            |
   |<-- update FAILED ------------|                                    |                            | deck.html (restored — attempt 3's half-edit gone)
   |                              |                                    |                            |
+
+## Instructions
+Step 1: Pre-requisites and start worker
 ```sh
 # Activate environment
 python3.13 -m venv .venv
@@ -344,13 +347,27 @@ pip install -r requirements.txt
 # Getting Started
 temporal server start-dev
 python worker.py
+```
 
+Step 2: Generate Deck
+```sh
 cd agents
 python app.py
-# app.py prints a unique Workflow ID (deck-workflow-<8 hex chars>) — pass it to the commands below
-python feedback.py deck-workflow-96853fe5 --feedback "Add a new slide at first slide called 2 you and a picture of a flower"
-python feedback.py deck-workflow-ab2ca2ba --approve
-temporal workflow query --workflow-id deck-workflow-96382778 --type revision_status # show lock
+# OUTPUT:
+# Started workflow. Workflow ID: deck-workflow-2236c36b, RunID: 01a0c839-f2a4-72d6-b13a-69b27cdd93c9
+```
+
+Step 3: revise deck
+```sh
+export wid="deck-workflow-112ab022"
+python feedback.py "$wid" --feedback "Add a new slide at first slide called 2 you"
+python feedback.py "$wid" --approve
+temporal workflow query --workflow-id "$wid" --type revision_status 
+```
+
+Step 4: [optional] extend time out
+```sh
+python feedback.py "$wid" --extend 3
 ```
 
 ### Other useful CLI command

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Self-Improving Deck — Temporal + Claude Agents</title>
+<title>Self-Improving Deck · Temporal + Claude Agents</title>
 <style>
     :root {
         --bg: #0d1117;
@@ -246,8 +246,8 @@
     <h1>Self-Improving Deck</h1>
     <p class="lede">
         Two Claude agents generate and refine an HTML presentation deck, orchestrated by a single
-        Temporal workflow — with a human-in-the-loop feedback cycle that survives worker crashes,
-        failed model calls, and reviewers who take days to reply.
+        Temporal workflow. A human reviewer sits in the loop, and the feedback cycle survives worker
+        crashes, failed model calls, and reviewers who take days to reply.
     </p>
     <div class="badges">
         <a class="badge repo" href="https://github.com/jessicaahm/self-improving-deck" target="_blank" rel="noopener">
@@ -289,8 +289,8 @@
         <p class="lede">
             Three processes: the Temporal server holding the event history, a worker running the workflow and
             its activities, and your terminal sending the workflow start, the feedback, and the approval.
-            Claude is reached only from inside activities — never from workflow code, which must stay
-            deterministic.
+            Only activities reach Claude. Workflow code has to stay deterministic, so it makes no
+            such calls itself.
         </p>
 
         <div class="diagram">
@@ -346,7 +346,7 @@
                 <text x="240" y="250" class="sm" fill="#c9d1d9">▸ Web UI :8233</text>
 
                 <!-- ---- worker ---- -->
-                <text x="448" y="42" class="cap">worker.py — one process, polls the queue</text>
+                <text x="448" y="42" class="cap">worker.py · one process, polls the queue</text>
                 <rect x="448" y="52" width="456" height="240" rx="10" fill="#0f1319" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
 
                 <rect x="466" y="74" width="190" height="200" rx="8" class="bx" stroke="#8957e5"/>
@@ -430,16 +430,19 @@
                 </g>
 
                 <!-- ---- footnote ---- -->
-                <text x="16" y="480" class="sm">Workflow code never calls Claude or touches the filesystem — only activities do, so replay stays deterministic.</text>
+                <text x="16" y="480" class="sm">Workflow code never calls Claude or touches the filesystem. Only activities do that, which is what keeps replay deterministic.</text>
             </svg>
         </div>
 
         <h3 style="margin: 2rem 0 0.5rem;">Happy-path sequence</h3>
         <p class="sub" style="margin-bottom: 1rem;">
-            The six lifelines from the README, animated: every message travels the path the data actually takes,
-            in order. Click any message to jump to it.
+            The red gutter marks where the README's failure cases can strike this path. Cases 1&ndash;14 each
+            land on one of these nine messages. A <strong style="color:#f85149;">✗</strong> on a lifeline shows
+            <em>who</em> dies at that event: the worker process, the Claude call, the workflow run or the rejected
+            update handler. The amber band down <code>submit_feedback()</code> is the revision lock, closed where
+            it is acquired and open where it is released; a second feedback blocks for that whole stretch (Case 9).
+            Click any marker to jump there, and the caption will name the casualty.
         </p>
-
         <div class="player seq-player">
             <div class="player-bar">
                 <div class="tabrow"><span class="seq-caption" id="seq-caption"></span></div>
@@ -447,20 +450,12 @@
                 <button class="playbtn" id="seq-toggle" aria-label="Pause or play the sequence">⏸ Pause</button>
             </div>
             <div class="seqwrap"><svg id="seq" xmlns="http://www.w3.org/2000/svg" role="img"
-                aria-label="Sequence diagram of the happy path: app.py starts the workflow, generate_deck calls Claude and writes the deck, feedback is submitted as an update that snapshots and revises the deck, and the approve signal completes the run. A right-hand gutter marks which of the fifteen failure cases can strike at each message."></svg></div>
+                aria-label="Sequence diagram of the happy path: app.py starts the workflow, generate_deck calls Claude and writes the deck, feedback is submitted as an update that snapshots and revises the deck, and the approve signal completes the run. A right-hand gutter marks which of the fourteen failure cases can strike at each message."></svg></div>
         </div>
-        <p class="sub" style="margin-top: 0.6rem;">
-            The red gutter marks where the README's failure cases can strike this path — cases 1&ndash;14 each
-            land on one of these nine messages. A <strong style="color:#f85149;">✗</strong> on a lifeline shows
-            <em>who</em> dies at that event: the worker process, the Claude call, the workflow run or the rejected
-            update handler. The amber band down <code>submit_feedback()</code> is the revision lock: 🔒 where it is
-            acquired, open where it is released, and a second feedback blocks for that whole stretch (Case 9).
-            Click any marker to jump there; the caption names the casualty.
-        </p>
 
         <h3 style="margin: 2.25rem 0 0.35rem;">Every failure case</h3>
         <p class="sub" style="margin-bottom: 0.9rem;">
-            The fourteen cases the markers above point at — where each one strikes, what goes wrong, and the
+            The fourteen cases the markers above point at: where each one strikes, what goes wrong, and the
             mechanism that handles it.
         </p>
 
@@ -470,11 +465,11 @@
                 <tr><th>Failure point</th><th>Failure description</th><th>Solution</th></tr>
             </thead>
             <tbody>
-                <tr class="grouprow"><th colspan="3">Deck.run() — the workflow</th></tr>
+                <tr class="grouprow"><th colspan="3">Deck.run(), the workflow</th></tr>
 
                 <tr>
                     <td><span class="tag">Case 1</span><span class="pt">query(prompt) → Claude</span><span class="dies">✗ Claude Agent SDK</span></td>
-                    <td>Retries exhausted. <code>generate_deck</code> fails on every attempt — a network error,
+                    <td>Retries exhausted. <code>generate_deck</code> fails on every attempt: a network error,
                         <code>ClaudeAgentFailed</code>, or an empty result.</td>
                     <td>Retry policy gives 3 attempts (5s → 10s backoff). The write is <code>.tmp</code> +
                         <code>os.replace</code>, so no partial deck is ever visible. After attempt 3,
@@ -483,7 +478,7 @@
                 </tr>
                 <tr>
                     <td><span class="tag">Case 2</span><span class="pt">query(prompt) → Claude</span><span class="dies">✗ Claude Agent SDK</span></td>
-                    <td>Terminal error. Claude reports "Not logged in" — no amount of retrying will fix it.</td>
+                    <td>Terminal error. Claude reports "Not logged in", which no amount of retrying will fix.</td>
                     <td><code>_as_temporal_error</code> maps it to <code>ApplicationError(type="Unauthorized",
                         non_retryable=True)</code>, which is listed in <code>non_retryable_error_types</code>.
                         Attempts 2 and 3 are skipped and compensation runs at once, saving ~35s of pointless backoff.</td>
@@ -492,7 +487,7 @@
                     <td><span class="tag">Case 3</span><span class="pt">wait_condition(approved)</span><span class="dies">✗ Deck.run()</span></td>
                     <td>The human never responds. A plain script cannot wait hours for a reviewer, and cannot survive
                         a restart while it waits.</td>
-                    <td><code>wait_condition(approved, timeout=3m)</code> is a durable timer in the event history — the
+                    <td><code>wait_condition(approved, timeout=3m)</code> is a durable timer in the event history. The
                         worker can restart mid-wait and it still fires. On expiry the run raises
                         <code>ApprovalTimeout</code>, drains in-flight handlers, then
                         <code>delete_deck(delete_all=True)</code> removes deck, backup and <code>.tmp</code>.</td>
@@ -502,7 +497,7 @@
                     <td>The worker dies mid-activity. <code>generate_deck</code> sends no heartbeats, so Temporal
                         cannot tell a slow Claude call from a dead process.</td>
                     <td><code>start_to_close=5m</code> bounds the damage: at 5 minutes the attempt is failed and
-                        retried. On restart the workflow replays from history — <code>saga.add</code> is re-applied
+                        retried. On restart the workflow replays from history: <code>saga.add</code> is re-applied
                         deterministically and no completed activity is re-run. (Compare Case 10, detected in ~30s.)</td>
                 </tr>
                 <tr>
@@ -515,7 +510,7 @@
                 </tr>
                 <tr>
                     <td><span class="tag">Case 6</span><span class="pt">approval timer fires</span></td>
-                    <td>Same race as Case 5, but on the timeout path — the deadline expires mid-revision.</td>
+                    <td>Same race as Case 5, but on the timeout path: the deadline expires mid-revision.</td>
                     <td>The same <code>finally</code> applies. The handler finishes (or fails and runs
                         <code>restore_deck</code>), and <em>then</em> the run's <code>delete_deck</code> wipes
                         everything. Both sagas unwind, LIFO within each.</td>
@@ -525,24 +520,24 @@
                     <td>A cancel request is delivered as <code>asyncio.CancelledError</code> inside <code>run()</code>.</td>
                     <td>Caught by <code>except (Exception, asyncio.CancelledError)</code>, so <code>delete_deck</code>
                         still runs. Note that <code>submit_feedback</code>'s <code>except Exception</code> does
-                        <strong>not</strong> catch it — a revision in flight skips <code>restore_deck</code>, but
+                        <strong>not</strong> catch it, so a revision in flight skips <code>restore_deck</code>.
                         <code>delete_deck</code> cleans up regardless.</td>
                 </tr>
                 <tr class="nofix">
                     <td><span class="tag">Case 8</span><span class="pt">workflow terminated</span></td>
                     <td>Terminate stops the workflow at the server without running any workflow code at all.</td>
                     <td><strong>None.</strong> No saga runs; the deck, the backup and any <code>.tmp</code> files are
-                        left on disk. This is the one failure mode Temporal cannot help with — prefer cancel over
-                        terminate.</td>
+                        left on disk. This is the only failure mode here that Temporal cannot help with, so
+                        prefer cancel over terminate.</td>
                 </tr>
 
-                <tr class="grouprow"><th colspan="3">submit_feedback() — the update handler</th></tr>
+                <tr class="grouprow"><th colspan="3">submit_feedback(), the update handler</th></tr>
 
                 <tr>
                     <td><span class="tag">Case 9</span><span class="pt">acquire the revision lock</span></td>
                     <td>Data corruption. Two feedback updates arrive together and would both edit the same deck.</td>
-                    <td><code>asyncio.Lock</code> serialises them: B waits for the whole of A's revision — the amber
-                        band above — and <code>revision_status</code> reports <code>locked=true</code> meanwhile.
+                    <td><code>asyncio.Lock</code> serializes them: B waits for the whole of A's revision (the amber
+                        band above), and <code>revision_status</code> reports <code>locked=true</code> meanwhile.
                         B's snapshot is taken after A finishes, so rolling B back lands on A's deck, not the original.</td>
                 </tr>
                 <tr>
@@ -558,12 +553,12 @@
                     <td>Wrong sequence of events. Feedback arrives before the deck exists, or the feedback text is
                         blank.</td>
                     <td><code>validate_feedback</code> rejects the update before the handler body runs: no lock is
-                        taken, no activity is scheduled, and a rejected update leaves no events in history — so the
+                        taken, no activity is scheduled, and a rejected update leaves no events in history, so the
                         caller can simply resend once generation completes.</td>
                 </tr>
                 <tr>
                     <td><span class="tag">Case 12</span><span class="pt">query(prompt, tools=…) → Claude</span><span class="dies">✗ Claude Agent SDK</span></td>
-                    <td>Terminal error during revision — Claude is not logged in.</td>
+                    <td>Terminal error during revision: Claude is not logged in.</td>
                     <td>Same <code>Unauthorized</code> rule as Case 2: retries are skipped and
                         <code>saga.compensate()</code> runs <code>restore_deck</code>. The update FAILS but the
                         workflow stays alive, parked on the approval timer.</td>
@@ -571,7 +566,7 @@
                 <tr>
                     <td><span class="tag">Case 13</span><span class="pt">query(prompt, tools=…) → Claude</span><span class="dies">✗ Claude Agent SDK</span></td>
                     <td>Retries exhausted. All 3 attempts of <code>revise_deck</code> fail, each one having reset from
-                        the snapshot first — so the deck is left holding the last attempt's half-edit.</td>
+                        the snapshot first, so the deck is left holding the last attempt's half-edit.</td>
                     <td><code>saga.compensate()</code> runs <code>restore_deck</code>, copying the snapshot back over
                         the deck. It returns to its pre-feedback state, the workflow stays alive, and the next feedback
                         snapshots a clean baseline.</td>
@@ -581,7 +576,7 @@
                     <td>The snapshot itself fails. <code>snapshot_deck</code> is fast file I/O but can still hit a disk
                         or permissions error, and is retried 3×.</td>
                     <td>If its retries are exhausted, <code>saga.add(restore_deck)</code> was never reached, so
-                        <code>compensate()</code> is a no-op — which is correct, because the deck was never touched.
+                        <code>compensate()</code> is a no-op. That is correct, because the deck was never touched.
                         The update FAILS and the deck is unchanged.</td>
                 </tr>
             </tbody>
@@ -595,8 +590,8 @@
     <div class="container">
         <h2><span class="num">03</span> Use cases the repo exercises</h2>
         <p class="lede">
-            Each scenario is a scripted failure or race you can reproduce live — all of them have been run
-            end-to-end against the code in this repo.
+            Each scenario is a scripted failure or race you can reproduce live. All of them have been run
+            end to end against the code in this repo.
         </p>
 
         <div class="grid two">
@@ -613,14 +608,14 @@
                     <span class="pill pass">passed</span>
                     <div class="body">
                         <div class="flow">Feedback sent before the deck exists</div>
-                        <div class="out">The update validator rejects it — <code>"Deck not generated yet"</code> — without touching workflow state.</div>
+                        <div class="out">The update validator rejects it with <code>"Deck not generated yet"</code>, without touching workflow state.</div>
                     </div>
                 </div>
                 <div class="case">
                     <span class="pill pass">passed</span>
                     <div class="body">
                         <div class="flow">Approve while <code>revise_deck</code> is running</div>
-                        <div class="out">The wait unblocks, but <code>all_handlers_finished</code> keeps the workflow from completing mid-revision — the in-flight edit finishes first.</div>
+                        <div class="out">The wait unblocks, but <code>all_handlers_finished</code> keeps the workflow from completing mid-revision, so the in-flight edit finishes first.</div>
                     </div>
                 </div>
                 <div class="case">
@@ -731,7 +726,7 @@ python worker.py</code></pre>
             <div class="n">4</div>
             <div>
                 <h3>Start a run</h3>
-                <p class="sub">Prints a fresh workflow ID like <code>deck-workflow-96853fe5</code> — every run gets its own, so you can re-run without an ID clash.</p>
+                <p class="sub">Prints a fresh workflow ID like <code>deck-workflow-96853fe5</code>. Every run gets its own, so you can re-run without an ID clash.</p>
 <pre><code>python app.py</code></pre>
             </div>
         </div>
@@ -763,13 +758,13 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
         <div class="note">
             <strong style="color:#c9d1d9;">To see durability live:</strong> start a run, kill the worker with
             <code>Ctrl+C</code> while <code>generate_deck</code> or <code>revise_deck</code> is in flight, then start
-            <code>python worker.py</code> again. The workflow resumes from the last completed activity — no repeated
-            Claude calls — and <code>revise_deck</code> rewinds the deck to its snapshot before retrying, so the
-            feedback is applied exactly once.
+            <code>python worker.py</code> again. The workflow resumes from the last completed activity, with no
+            repeated Claude calls, and <code>revise_deck</code> rewinds the deck to its snapshot before retrying,
+            so the feedback is applied exactly once.
         </div>
 
         <p class="sub" style="margin-top: 1rem;">
-            The generated deck lands at <code>agents/output/deck_&lt;workflow_id&gt;.html</code> — a self-contained
+            The generated deck lands at <code>agents/output/deck_&lt;workflow_id&gt;.html</code>, a self-contained
             single file with no external CSS or JS. Open it in a browser.
         </p>
     </div>
@@ -785,15 +780,15 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
             <div class="stack-row">
                 <div class="name">temporalio</div>
                 <div class="what">
-                    Python SDK for Temporal. Provides durability, visibility into every step, atomic activity
-                    orchestration, and the primitives the saga pattern is built on — signals, updates, queries,
+                    Python SDK for Temporal. It gives you durability, visibility into every step, atomic activity
+                    orchestration, and the primitives the saga pattern is built on: signals, updates, queries,
                     timers, retry policies and heartbeats.
                 </div>
             </div>
             <div class="stack-row">
                 <div class="name">claude-agent-sdk</div>
                 <div class="what">
-                    Runs both agents. Chosen over the API client SDK for cost — it runs against a Claude Code
+                    Runs both agents. Chosen over the API client SDK for cost, since it runs against a Claude Code
                     subscription, so you must be logged in (<code>claude auth login</code>). Generation runs
                     tool-free and returns raw HTML; revision gets <code>Read</code>/<code>Edit</code>/<code>Write</code>
                     with <code>permission_mode="acceptEdits"</code> so it edits the deck in place.
@@ -814,22 +809,6 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
             <div class="stack-row">
                 <div class="name">Python 3.13</div>
                 <div class="what">Plain <code>dataclasses</code> cross the workflow/activity boundary, which keeps arguments backwards-compatible as the schema evolves; <code>asyncio.Lock</code> serializes concurrent revision handlers.</div>
-            </div>
-        </div>
-
-        <h3 style="margin: 2rem 0 0.75rem;">Patterns implemented in the code itself</h3>
-        <div class="grid three">
-            <div class="card purple">
-                <span class="kicker">Idempotency</span>
-                <p>Writes go to a <code>.tmp</code> file then <code>os.replace</code> — atomic, so a retry can never observe a half-written deck. <code>revise_deck</code> restores from the snapshot at the start of every attempt.</p>
-            </div>
-            <div class="card purple">
-                <span class="kicker">Saga</span>
-                <p><code>Saga.add()</code> registers <code>delete_deck</code> <em>before</em> generation starts, so any run-level failure cleans up whatever got created; <code>compensate()</code> unwinds LIFO and keeps going if one compensation fails. Revision rollback is handled inside the activity instead.</p>
-            </div>
-            <div class="card purple">
-                <span class="kicker">Terminal vs. retryable</span>
-                <p><code>Unauthorized</code> is listed as non-retryable, so a logged-out Claude fails fast into compensation instead of burning three backoff attempts.</p>
             </div>
         </div>
     </div>
@@ -859,45 +838,45 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
   // [from, to, label, kind, caption]
   const MSGS = [
     ['cli','run',  'start workflow · deck-workflow-xxxx', 'call', 'app.py starts the run; Temporal records WorkflowExecutionStarted'],
-    ['run','run',  'saga.add(delete_deck)  [registered, not run]', 'self', 'The undo is registered before anything exists to undo'],
-    ['run','wkr',  'execute_activity(generate_deck)', 'call', 'start_to_close=5m and no heartbeat — a dead worker is only noticed at the 5-minute mark'],
+    ['run','run',  'saga.add(delete_deck)  [registered, not run]', 'self', 'delete_deck is registered as the undo step before any deck exists'],
+    ['run','wkr',  'execute_activity(generate_deck)', 'call', 'start_to_close=5m and no heartbeat, so a dead worker is only noticed at the 5-minute mark'],
     ['wkr','disk', 'read content.md', 'io', 'The activity reads the source content'],
     ['wkr','cld',  'query(prompt) · no tools', 'call', 'Claude is asked for a self-contained HTML deck'],
     ['cld','wkr',  'ResultMessage(html)', 'ret', 'Raw HTML comes back in the result message'],
     ['wkr','disk', 'write deck.tmp → os.replace', 'io', 'Atomic write: a partial deck is never visible'],
     ['wkr','run',  'DeckOutput(200) → deck_ready = True', 'ret', 'The result lands in history and unlocks the validator'],
     ['run','run',  'wait_condition(approved, timeout=3m)  [TIMER STARTS]', 'self', 'The workflow parks. The timer is durable; no process need stay alive'],
-    ['cli','upd',  'update: submit_feedback("add slide")', 'call', 'Feedback arrives as an update, not a signal — it returns a result'],
+    ['cli','upd',  'update: submit_feedback("add slide")', 'call', 'Feedback arrives as an update, not a signal, so it returns a result to the caller'],
     ['upd','upd',  'validator ok → acquire the revision lock', 'self', 'revision_status now answers {"locked": true}'],
-    ['upd','wkr',  'execute_activity(snapshot_deck)', 'call', 'Back up before touching anything'],
+    ['upd','wkr',  'execute_activity(snapshot_deck)', 'call', 'The deck is backed up before anything edits it'],
     ['wkr','disk', 'copy → deck_<id>-backup.html', 'io', 'The snapshot every retry will rewind to'],
-    ['wkr','upd',  'SnapshotResult(created=True)', 'ret', 'Only a real snapshot earns a compensation'],
-    ['upd','upd',  'saga.add(restore_deck)  [registered, not run]', 'self', 'Registered the instant the snapshot succeeds — never before'],
-    ['upd','wkr',  'execute_activity(revise_deck)', 'call', 'heartbeat_timeout=30s — a dead worker is now detected in ~30s, not 5 minutes'],
-    ['wkr','disk', 'reset deck from backup', 'io', 'Every attempt starts from the snapshot — this is the idempotency'],
+    ['wkr','upd',  'SnapshotResult(created=True)', 'ret', 'created=True is what decides whether a compensation is registered'],
+    ['upd','upd',  'saga.add(restore_deck)  [registered, not run]', 'self', 'The undo is registered only once the snapshot it depends on exists'],
+    ['upd','wkr',  'execute_activity(revise_deck)', 'call', 'heartbeat_timeout=30s, so a dead worker is now detected in ~30s instead of 5 minutes'],
+    ['wkr','disk', 'reset deck from backup', 'io', 'Every attempt starts from the snapshot, which is what makes the revision idempotent'],
     ['wkr','cld',  'query(prompt, tools=Read/Edit/Write)', 'call', 'Heartbeating every 2s; permission_mode="acceptEdits", scoped to the one file'],
-    ['cld','disk', 'Claude edits deck_<id>.html directly', 'io', 'The model writes the file itself — inside an activity, never in workflow code'],
+    ['cld','disk', 'Claude edits deck_<id>.html directly', 'io', 'The model writes the file itself, from inside an activity, never from workflow code'],
     ['cld','wkr',  'ResultMessage', 'ret', 'The edit session ends'],
     ['wkr','upd',  'result_text', 'ret', 'The activity result is recorded in history'],
     ['upd','cli',  '"Revised Deck: ..." · release lock', 'ret', 'The update returns to the caller that sent it'],
     ['cli','run',  'signal: approve', 'sig', 'Fire-and-forget; signals have no validator and no return value'],
     ['run','run',  'approved = True → wait_condition unblocks  [TIMER CANCELLED]', 'self', 'The durable timer is discarded'],
-    ['run','run',  'finally: wait_condition(all_handlers_finished)  [no-op]', 'self', 'Here the handler is already done — but this is what Case 5 depends on'],
+    ['run','run',  'finally: wait_condition(all_handlers_finished)  [no-op]', 'self', 'Here the handler is already done, but Case 5 depends on this line'],
     ['run','cli',  'workflow COMPLETED · deck + backup kept', 'ret', 'A success path: neither saga is compensated']
   ];
 
 
   // failure cases from the README, keyed by the message they can strike at
   const RISKS = {
-    2:  { cases: '4', dies: 'wkr',      text: 'Worker dies here and <code>generate_deck</code> has no heartbeat — Temporal cannot tell a slow Claude call from a dead worker, so it waits the full <code>start_to_close=5m</code> before retrying.' },
+    2:  { cases: '4', dies: 'wkr',      text: 'Worker dies here and <code>generate_deck</code> has no heartbeat, so Temporal cannot tell a slow Claude call from a dead worker and waits the full <code>start_to_close=5m</code> before retrying.' },
     4:  { cases: '1 · 2', dies: 'cld',  text: 'Claude fails (<code>ClaudeAgentFailed</code>, <code>EmptyResult</code>) → 3 attempts, then <code>delete_deck</code> and the run FAILS. If it is "Not logged in" → <code>Unauthorized</code>, non-retryable, compensation runs at once.' },
     8:  { cases: '3 · 7 · 8', dies: 'run', text: 'Nobody approves → the 3m timer fires <code>ApprovalTimeout</code> and <code>delete_deck(delete_all=True)</code> wipes everything. Cancel is caught and compensates too; <b>Terminate</b> runs no workflow code at all and leaves the files behind.' },
-    9:  { cases: '11', dies: 'upd',     text: 'Sent too early, the validator rejects it — <code>deck_ready</code> is False. No lock, no activity, no event in history.' },
-    10: { cases: '9',      text: 'A second feedback contends here. The amber band shows how long <code>revision_in_progress_lock</code> is held — B blocks for all of it, then snapshots A&rsquo;s result, not the original.' },
-    11: { cases: '14', dies: 'wkr',     text: 'If <code>snapshot_deck</code> exhausts its retries, <code>saga.add(restore_deck)</code> is never reached — so compensation is a no-op, which is correct: the deck was never touched.' },
+    9:  { cases: '11', dies: 'upd',     text: 'Sent too early, the validator rejects it because <code>deck_ready</code> is False. No lock, no activity, no event in history.' },
+    10: { cases: '9',      text: 'A second feedback contends here. The amber band shows how long <code>revision_in_progress_lock</code> is held. B blocks for all of it, then snapshots A&rsquo;s result, not the original.' },
+    11: { cases: '14', dies: 'wkr',     text: 'If <code>snapshot_deck</code> exhausts its retries, <code>saga.add(restore_deck)</code> is never reached, so compensation is a no-op. That is correct, because the deck was never touched.' },
     15: { cases: '10', dies: 'wkr',     text: 'Worker dies mid-edit. Heartbeats every 2s mean it is caught in ~30s, and attempt 2 rewinds from the snapshot so the feedback applies exactly once.' },
     17: { cases: '12 · 13', dies: 'cld', text: '<code>Unauthorized</code> skips the retries; a retryable failure burns all 3 attempts. Either way <code>restore_deck</code> puts the deck back and the workflow stays alive.' },
-    22: { cases: '5 · 6',  text: 'If this lands mid-revision, <code>all_handlers_finished</code> holds the workflow open until the edit completes. Same guard when the <i>timer</i> fires instead — the handler finishes, then <code>delete_deck</code> wipes everything.' },
+    22: { cases: '5 · 6',  text: 'If this lands mid-revision, <code>all_handlers_finished</code> holds the workflow open until the edit completes. Same guard when the <i>timer</i> fires instead: the handler finishes, then <code>delete_deck</code> wipes everything.' },
   };
 
   const COLOR = { call:'#58a6ff', ret:'#8b949e', self:'#d2a8ff', io:'#3fb950', sig:'#d29922' };
@@ -986,14 +965,14 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
     const vt = el('text', { x: lx - 26, y: (ly1 + ly2) / 2, fill: '#d29922', 'font-size': 10.5,
                             'text-anchor': 'middle', 'font-family': 'ui-monospace, Menlo, monospace',
                             transform: `rotate(-90 ${lx - 26} ${(ly1 + ly2) / 2})` });
-    vt.textContent = 'revision_in_progress_lock held — B waits here';
+    vt.textContent = 'revision_in_progress_lock held · B waits here';
     lockBand.appendChild(vt);
-    const t1 = el('title'); t1.textContent = 'Case 9 — the lock is held for the whole revision';
+    const t1 = el('title'); t1.textContent = 'Case 9: the lock is held for the whole revision';
     lockBand.appendChild(t1);
 
     const acq = padlock(lx, ly1, false), rel = padlock(lx, ly2, true);
-    acq.appendChild(Object.assign(el('title'), { textContent: 'Lock acquired — a second feedback blocks here' }));
-    rel.appendChild(Object.assign(el('title'), { textContent: 'Lock released — B may now proceed' }));
+    acq.appendChild(Object.assign(el('title'), { textContent: 'Lock acquired: a second feedback blocks here' }));
+    rel.appendChild(Object.assign(el('title'), { textContent: 'Lock released: B may now proceed' }));
     lockIcons.appendChild(acq); lockIcons.appendChild(rel);
   }
 
@@ -1063,7 +1042,7 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
         d: `M ${cx - 5.4} ${y - 5.4} L ${cx + 5.4} ${y + 5.4} M ${cx + 5.4} ${y - 5.4} L ${cx - 5.4} ${y + 5.4}`,
         stroke: '#f85149', 'stroke-width': 2.4, 'stroke-linecap': 'round', fill: 'none' }));
       const tip = el('title');
-      tip.textContent = `${LANES[risk.dies].name} dies here — Case ${risk.cases}`;
+      tip.textContent = `${LANES[risk.dies].name} dies here · Case ${risk.cases}`;
       cross.appendChild(tip);
       cross.addEventListener('click', () => { if (allOn) setAll(false); stop(); show(i); });
       crossLayer.appendChild(cross);
@@ -1088,10 +1067,10 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
       clearInterval(timer);
       groups.forEach(m => { m.g.classList.remove('on', 'past'); if (m.cross) m.cross.classList.remove('on'); });
       lockBand.classList.add('on'); lockIcons.classList.add('on');
-      const deaths = groups.filter(m => m.risk && m.risk.dies).length;
+      const failures = groups.filter(m => m.risk && m.risk.dies).length;
       const points = groups.filter(m => m.risk).length;
       capEl.innerHTML = `<b>${groups.length} messages</b> &nbsp;${points} failure points &nbsp;·&nbsp; `
-        + `<i>✗ ${deaths} lifeline deaths</i> &nbsp;·&nbsp; the whole path at once`;
+        + `<i>✗ ${failures} failures</i> &nbsp;·&nbsp; the whole path at once`;
     } else {
       show(cur < 0 ? 0 : cur);
       if (playing) start();
