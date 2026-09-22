@@ -1,6 +1,8 @@
 ## Getting started
 This repository shows how hard it is to generate a deck and iterate on it with human feedback durably. It sounds like a simple exercise — until you run it in a distributed environment where the worker can crash, the model can fail mid-edit, and the human can take days to respond.
 
+Refer to this for more animated explaination: https://jessicaahm.github.io/self-improving-deck/
+
 > Note: This may be an overly simplified example, but in a production setting e.g. transfer fund, make travel booking, these considereations may be worth considering.
 
 **4 Areas to be covered:**
