@@ -368,7 +368,7 @@
                     <span class="pill pass">passed</span>
                     <div class="body">
                         <div class="flow">Revise fails after logging out of Claude</div>
-                        <div class="out">A non-retryable <code>Unauthorized</code> error triggers <code>restore_deck</code>; the deck returns to its pre-feedback state.</div>
+                        <div class="out">A non-retryable <code>Unauthorized</code> error fails on attempt 1. Because <code>revise_deck</code> rewinds from the snapshot <em>before</em> calling Claude, the deck is left at its pre-feedback state.</div>
                     </div>
                 </div>
 
@@ -500,9 +500,9 @@
                 <text x="704" y="144" class="sm" fill="#c9d1d9">generate_deck</text>
                 <text x="704" y="164" class="sm" fill="#c9d1d9">snapshot_deck</text>
                 <text x="704" y="184" class="sm" fill="#c9d1d9">revise_deck <tspan class="sm">· heartbeats 2s</tspan></text>
-                <text x="704" y="204" class="sm" fill="#c9d1d9">restore_deck <tspan class="sm">· compensation</tspan></text>
-                <text x="704" y="224" class="sm" fill="#c9d1d9">delete_deck <tspan class="sm">· compensation</tspan></text>
-                <text x="704" y="252" class="sm">Saga unwinds these LIFO</text>
+                <text x="704" y="204" class="sm" fill="#c9d1d9">delete_deck <tspan class="sm">· compensation</tspan></text>
+                <text x="704" y="224" class="sm" fill="#6e7681">restore_deck <tspan class="sm">· registered, unused</tspan></text>
+                <text x="704" y="252" class="sm">Saga (in run) unwinds LIFO</text>
 
                 <!-- ---- bottom resources ---- -->
                 <rect x="224" y="392" width="176" height="56" rx="8" class="bx"/>
@@ -574,7 +574,7 @@
             <div class="player-bar" role="tablist" aria-label="Execution scenarios">
                 <button class="tab" role="tab" data-scenario="happy" aria-selected="true">happy path</button>
                 <button class="tab" role="tab" data-scenario="timeout" aria-selected="false">nobody approves</button>
-                <button class="tab" role="tab" data-scenario="saga" aria-selected="false">failure → saga</button>
+                <button class="tab" role="tab" data-scenario="revfail" aria-selected="false">revision fails</button>
                 <button class="tab" role="tab" data-scenario="crash" aria-selected="false">crash → resume</button>
                 <button class="tab" role="tab" data-scenario="race" aria-selected="false">two reviewers</button>
                 <button class="playbtn" id="toggle" aria-label="Pause or play the walkthrough">⏸ Pause</button>
@@ -719,7 +719,7 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
             </div>
             <div class="card purple">
                 <span class="kicker">Saga</span>
-                <p><code>Saga.add()</code> registers a compensation the moment a side effect succeeds; <code>compensate()</code> unwinds them LIFO and keeps going if one fails.</p>
+                <p><code>Saga.add()</code> registers <code>delete_deck</code> <em>before</em> generation starts, so any run-level failure cleans up whatever got created; <code>compensate()</code> unwinds LIFO and keeps going if one compensation fails. Revision rollback is handled inside the activity instead.</p>
             </div>
             <div class="card purple">
                 <span class="kicker">Terminal vs. retryable</span>
@@ -744,7 +744,7 @@ const SCENARIOS = {
     ["The deck is written atomically", "Output goes to a <code>.tmp</code> file, then <code>os.replace</code> swaps it into <code>output/deck_&lt;id&gt;.html</code>.", "io"],
     ["The workflow parks on wait_condition", "<code>await workflow.wait_condition(lambda: self.approved)</code>. No process needs to stay alive — the wait lives in the event history.", "wait"],
     ["feedback.py sends an update", "The validator checks the deck exists and the text is non-empty, then <code>submit_feedback</code> takes the revision lock.", "update"],
-    ["snapshot_deck takes a backup", "The deck is copied to <code>-backup.html</code>, and <code>restore_deck</code> is pushed onto this handler's saga stack.", "activity"],
+    ["snapshot_deck takes a backup", "The deck is copied to <code>deck_&lt;id&gt;-backup.html</code>. That snapshot is the recovery point every retry of the revision rewinds to.", "activity"],
     ["revise_deck edits in place", "Claude gets Read/Edit/Write on that one file and heartbeats every 2 seconds so a stall is detected quickly.", "activity"],
     ["feedback.py --approve", "The <code>approve</code> signal sets <code>approved = True</code> and the wait unblocks.", "signal"],
     ["The workflow drains and completes", "<code>wait_condition(workflow.all_handlers_finished)</code> makes sure no revision is still running, then the run returns its result.", "done"]
@@ -761,14 +761,16 @@ const SCENARIOS = {
     ["Nothing is left half-done", "The alternative — a plain script dying at the timeout — leaves an unreviewed deck on disk that someone later mistakes for approved. Here the disk is back exactly where it started.", "cleanup"],
     ["The run ends Failed, on purpose", "The Web UI shows <code>ApprovalTimeout</code> plus the full history of what was built and then cleaned up. Start a new run to try again.", "done"]
   ],
-  saga: [
-    ["A revision is under way", "The deck exists, feedback arrived, and <code>snapshot_deck</code> has already produced <code>-backup.html</code>.", "update"],
-    ["restore_deck is on the stack", "The compensation is registered the instant the snapshot succeeds — never before, never later.", "saga"],
-    ["revise_deck fails terminally", "Claude is logged out. The SDK error is mapped to <code>ApplicationError(type=\"Unauthorized\", non_retryable=True)</code>, so Temporal does not retry it.", "error"],
-    ["The handler catches and compensates", "<code>saga.compensate()</code> walks the stack LIFO, each compensation running as its own retried activity.", "saga"],
-    ["restore_deck puts the deck back", "The backup is copied over the deck atomically. Disk state matches exactly what it was before the feedback.", "activity"],
-    ["The caller learns it failed", "Because feedback is an <em>update</em>, the error surfaces in the <code>feedback.py</code> terminal — not silently in a log.", "update"],
-    ["If instead the whole run times out", "The outer saga fires <code>delete_deck(delete_all=True)</code>, removing the deck, its backup and any stray temp files.", "saga"]
+  revfail: [
+    ["A revision is under way", "The deck exists, feedback arrived, and <code>snapshot_deck</code> has already written <code>deck_&lt;id&gt;-backup.html</code>.", "update"],
+    ["Attempt 1 rewinds, then edits", "<code>revise_deck</code> copies the backup over the deck before calling Claude, so the attempt always starts from a known state.", "activity"],
+    ["Attempt 1 fails after editing", "Claude has already changed part of the file when the run errors out. The deck on disk is now half-revised.", "error"],
+    ["Temporal retries — no rollback needed", "<code>ClaudeAgentFailed</code> is retryable, so attempt 2 is scheduled after backoff. Nothing has to be undone in between.", "detect"],
+    ["Attempt 2 rewinds first", "The same three lines at the top of the activity reset the deck from the snapshot, discarding attempt 1's partial work. The feedback lands exactly once instead of being applied twice.", "activity"],
+    ["A terminal error skips the retries", "If Claude is simply logged out, the error is mapped to <code>ApplicationError(type=\"Unauthorized\", non_retryable=True)</code>. It fails on attempt 1 — and since the rewind happens before Claude is called, the deck is already back at its pre-feedback state.", "error"],
+    ["The caller learns it failed", "Because feedback is an <em>update</em> rather than a signal, the error surfaces in the <code>feedback.py</code> terminal instead of disappearing into a log.", "update"],
+    ["The snapshot stays on disk", "<code>deck_&lt;id&gt;-backup.html</code> is kept, so the pre-feedback deck is still recoverable — and the next round of feedback overwrites it with a fresh snapshot.", "io"],
+    ["The run's own saga is untouched", "<code>delete_deck(delete_all=True)</code> was registered before generation and is still armed. A failed revision does not fire it; a failed <em>run</em> does.", "saga"]
   ],
   crash: [
     ["An activity is in flight", "<code>revise_deck</code> is mid-edit and heartbeating every 2 seconds.", "activity"],
