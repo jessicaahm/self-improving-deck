@@ -91,7 +91,6 @@
     .grid { display: grid; gap: 1rem; }
     .grid.two { grid-template-columns: repeat(2, 1fr); }
     .grid.three { grid-template-columns: repeat(3, 1fr); }
-    .grid.four { grid-template-columns: repeat(4, 1fr); }
     .card {
         background: var(--bg-soft); border: 1px solid var(--line);
         border-radius: 10px; padding: 1.1rem 1.2rem;
@@ -163,6 +162,14 @@
     }
     .playbtn:hover { border-color: var(--blue); color: var(--blue); }
 
+    /* ---------- demo gif ---------- */
+    figure.demo { margin: 1.25rem 0 0; }
+    figure.demo img {
+        width: 100%; max-width: 800px; height: auto; display: block;
+        background: var(--bg-inset); border: 1px solid var(--line); border-radius: 10px;
+    }
+    figure.demo figcaption { color: var(--muted); font-size: 0.8rem; margin-top: 0.5rem; }
+
     /* ---------- failure-case table ---------- */
     .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-soft); }
     .ftable { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 720px; }
@@ -217,7 +224,7 @@
     footer { border-top: 1px solid var(--line-soft); margin-top: 3rem; padding: 2rem 0 3rem; color: #484f58; font-size: 0.85rem; }
 
     @media (max-width: 760px) {
-        .grid.two, .grid.three, .grid.four { grid-template-columns: 1fr; }
+        .grid.two, .grid.three { grid-template-columns: 1fr; }
         h1 { font-size: 2rem; }
         .stack-row { grid-template-columns: 1fr; gap: 0.2rem; }
         nav .brand { display: none; }
@@ -233,11 +240,10 @@
 <nav>
     <div class="container">
         <span class="brand">self-improving-deck</span>
-        <a href="#about"><span class="num">01</span>Four areas</a>
-        <a href="#architecture"><span class="num">02</span>Architecture</a>
-        <a href="#use-cases"><span class="num">03</span>Use cases</a>
-        <a href="#run"><span class="num">04</span>Run it</a>
-        <a href="#stack"><span class="num">05</span>Tech stack</a>
+        <a href="#architecture"><span class="num">01</span>Architecture</a>
+        <a href="#use-cases"><span class="num">02</span>Use cases</a>
+        <a href="#run"><span class="num">03</span>Run it</a>
+        <a href="#stack"><span class="num">04</span>Tech stack</a>
     </div>
 </nav>
 
@@ -257,35 +263,10 @@
     </div>
 </header>
 
-<!-- ============ 1. ABOUT ============ -->
-<section id="about">
-    <div class="container">
-        <h2 style="margin-bottom: 1.25rem;"><span class="num">01</span> Four areas the demo covers</h2>
-        <div class="grid four">
-            <div class="card blue">
-                <span class="kicker">Interaction</span>
-                <p>Signal vs. update vs. query; update validators; handler concurrency and locks.</p>
-            </div>
-            <div class="card blue">
-                <span class="kicker">Detection</span>
-                <p>Start-to-close timeouts; activity heartbeats; retryable vs. terminal errors.</p>
-            </div>
-            <div class="card blue">
-                <span class="kicker">Recovery</span>
-                <p>Idempotent activities; saga compensation; durability and deterministic replay.</p>
-            </div>
-            <div class="card blue">
-                <span class="kicker">Foundation</span>
-                <p>Workflow sandbox and determinism; workflow-ID reuse policy; schema evolution.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ============ 2. ARCHITECTURE ============ -->
+<!-- ============ 1. ARCHITECTURE ============ -->
 <section id="architecture">
     <div class="container">
-        <h2><span class="num">02</span> Architecture</h2>
+        <h2><span class="num">01</span> Architecture</h2>
         <p class="lede">
             Three processes: the Temporal server holding the event history, a worker running the workflow and
             its activities, and your terminal sending the workflow start, the feedback, and the approval.
@@ -453,6 +434,13 @@
                 aria-label="Sequence diagram of the happy path: app.py starts the workflow, generate_deck calls Claude and writes the deck, feedback is submitted as an update that snapshots and revises the deck, and the approve signal completes the run. A right-hand gutter marks which of the fourteen failure cases can strike at each message."></svg></div>
         </div>
 
+        <!-- ---- demo gif ---- -->
+        <figure class="demo">
+            <img src="agents/img/happypath_small.gif" width="800" height="410" loading="lazy"
+                 alt="Screen recording of the demo: the workflow starts, the deck is generated, feedback is submitted and applied, and the approval completes the run.">
+            <figcaption>The same nine messages as above, recorded against a live worker.</figcaption>
+        </figure>
+
         <h3 style="margin: 2.25rem 0 0.35rem;">Every failure case</h3>
         <p class="sub" style="margin-bottom: 0.9rem;">
             The fourteen cases the markers above point at: where each one strikes, what goes wrong, and the
@@ -588,7 +576,7 @@
 <!-- ============ 3. USE CASES ============ -->
 <section id="use-cases">
     <div class="container">
-        <h2><span class="num">03</span> Use cases the repo exercises</h2>
+        <h2><span class="num">02</span> Use cases the repo exercises</h2>
         <p class="lede">
             Each scenario is a scripted failure or race you can reproduce live. All of them have been run
             end to end against the code in this repo.
@@ -688,7 +676,7 @@
 <!-- ============ 4. RUN IT ============ -->
 <section id="run">
     <div class="container">
-        <h2><span class="num">04</span> How to run it</h2>
+        <h2><span class="num">03</span> How to run it</h2>
         <p class="lede">
             You need a Claude Code subscription (the Agent SDK uses it instead of API billing) and the Temporal
             CLI installed. Four terminals is the comfortable setup: server, worker, starter, feedback.
@@ -773,7 +761,7 @@ temporal workflow show --workflow-id deck-workflow-96853fe5 --detailed</code></p
 <!-- ============ 5. TECH STACK ============ -->
 <section id="stack">
     <div class="container">
-        <h2><span class="num">05</span> Tech stack</h2>
+        <h2><span class="num">04</span> Tech stack</h2>
         <p class="lede">Three dependencies, one server, one model.</p>
 
         <div class="card">
